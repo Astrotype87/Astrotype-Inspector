@@ -1,0 +1,243 @@
+using System;
+using System.Diagnostics;
+using UnityEngine;
+
+namespace AstrotypeInspector
+{
+    [Conditional(Symbols.UNITY_EDITOR), Conditional(Symbols.INCLUDE_IN_BUILD)]
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
+    public sealed class TitleAttribute : PropertyAttribute, IDecorativeAttribute
+    {
+        public readonly string Title = null;
+        public readonly string Subtitle = null;
+        public readonly Icon Icon = Icon._NONE;
+        
+        public readonly TitleStyle Style = TitleStyle.Default;
+        public readonly Align Align = Align.Left;
+        public readonly bool Separator = false;
+        
+        public bool Bottom { get; set; } = false;
+        
+        internal bool HasSubtitle => !string.IsNullOrWhiteSpace(Subtitle);
+        
+        
+        public TitleAttribute(string title,
+            TitleStyle style = TitleStyle.Default, Align align = Align.Left, bool separator = false) : base(true)
+        {
+            Title = title;
+            
+            Style = style;
+            Align = align;
+            Separator = separator;
+        }
+        
+        public TitleAttribute(string title, Icon icon,
+            TitleStyle style = TitleStyle.Default, Align align = Align.Left, bool separator = false) : base(true)
+        {
+            Title = title;
+            Icon = icon;
+            
+            Style = style;
+            Align = align;
+            Separator = separator;
+        }
+        
+        public TitleAttribute(string title, string subtitle,
+            TitleStyle style = TitleStyle.Default, Align align = Align.Left, bool separator = false) : base(true)
+        {
+            Title = title;
+            Subtitle = subtitle;
+            
+            Style = style;
+            Align = align;
+            Separator = separator;
+        }
+        
+        public TitleAttribute(string title, string subtitle, Icon icon,
+            TitleStyle style = TitleStyle.Default, Align align = Align.Left, bool separator = false) : base(true)
+        {
+            Title = title;
+            Subtitle = subtitle;
+            Icon = icon;
+            
+            Style = style;
+            Align = align;
+            Separator = separator;
+        }
+        
+    }
+}
+
+#if UNITY_EDITOR
+namespace AstrotypeInspector.Editor
+{
+    using UnityEngine;
+    using UnityEditor;
+    using UnityEngine.UIElements;
+    using UnityEditor.UIElements;
+    
+    using Align = Align;
+    
+    [CustomPropertyDrawer(typeof(TitleAttribute))]
+    public class TitleDrawer : PropertyDrawer
+    {
+        // IMGUI height settings
+        private float titleMarginTop = EditorGUIUtility.singleLineHeight / 2;
+        private float titleHeight = EditorGUIUtility.singleLineHeight;
+        
+        private float iconMarginTop = 1f;
+        private float iconSize = EditorGUIUtility.singleLineHeight - 2f;
+        private float iconMarginRight = 1f;
+        
+        
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            return titleMarginTop + titleHeight
+                + EditorGUI.GetPropertyHeight(property, label, true);
+        }
+        
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            TitleAttribute attribute = this.attribute as TitleAttribute;
+            Texture iconTexture = IconDictionary.GetIconTexture(attribute.Icon);
+            
+            // Create title style
+            GUIStyle titleStyle = new(EditorStyles.boldLabel);
+            titleStyle.fontStyle = GetFontStyleByTitleStyle(attribute.Style, titleStyle.fontStyle);
+            titleStyle.alignment = GetMiddleAnchorByAlign(attribute.Align); // EditorStyles.boldLabel style uses Middle for text anchor
+            
+            // Draw title label
+            Rect titleRect = position;
+            titleRect.y += titleMarginTop;
+            titleRect.height = titleHeight;
+            if (iconTexture != null) // Leave space for icon
+            {
+                titleRect.x += iconSize + iconMarginRight;
+                titleRect.width += -iconSize + iconMarginRight;
+            }
+            GUI.Label(titleRect, new GUIContent(attribute.Title), titleStyle);
+            
+            // Draw icon image
+            if (iconTexture != null)
+            {
+                // Create icon style
+                GUIStyle iconStyle = new(EditorStyles.boldLabel);
+                iconStyle.alignment = GetMiddleAnchorByAlign(attribute.Align); // EditorStyles.boldLabel style uses Middle for text anchor
+                iconStyle.fixedHeight = iconSize; // reduce height to make icon smaller
+                iconStyle.contentOffset = new(iconStyle.contentOffset.x, iconMarginTop); // recenter after reducing height
+                
+                // Draw icon image
+                Rect iconRect = position;
+                iconRect.y += titleMarginTop;
+                iconRect.height = titleHeight;
+                GUI.Label(iconRect, new GUIContent(iconTexture), iconStyle);
+            }
+            
+            // Draw property field
+            Rect propertyRect = position;
+            propertyRect.y += titleMarginTop + titleHeight;
+            EditorGUI.PropertyField(propertyRect, property, label, true);
+        }
+        
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        {
+            TitleAttribute attribute = this.attribute as TitleAttribute;
+            Texture iconTexture = IconDictionary.GetIconTexture(attribute.Icon);
+            
+            // UI Toolkit height settings
+            float titleMarginTop = 13f; // based on standard header top margin
+            float iconSize = 16f; // based on EditorGUIUtility.singleLineHeight - 2f
+            float iconMarginLeft = 1f; // based on IMGUI where icon has little margin to the left
+            
+            // Create title wrapper
+            var titleWrapper = AstrotypeEditorGUI.CreateDecoratorWrapper("title-wrapper");
+            
+            // Create title label
+            var titleLabel = new Label(attribute.Title);
+            titleLabel.AddToClassList("unity-header-drawer__label"); // contains top margin from standard Header attribute drawer
+            
+            titleLabel.style.unityFontStyleAndWeight = GetFontStyleByTitleStyle(attribute.Style, EditorStyles.boldLabel.fontStyle); // standard header uses FontStyle.Bold
+            titleLabel.style.unityTextAlign = GetLowerAnchorByAlign(attribute.Align); // standard header uses Lower for text anchor
+            if (iconTexture != null)
+                titleLabel.style.marginLeft = iconSize + iconMarginLeft; // make space for icon
+            titleWrapper.Add(titleLabel);
+            
+            // Create icon image
+            Image iconImage = null;
+            if (iconTexture != null)
+            {
+                iconImage = new();
+                iconImage.image = iconTexture;
+                iconImage.style.width = iconSize;
+                iconImage.style.height = iconSize;
+                iconImage.style.flexGrow = 0;
+                iconImage.style.flexShrink = 0;
+                
+                iconImage.style.position = Position.Absolute;
+                iconImage.style.marginTop = titleMarginTop;
+                iconImage.style.marginLeft = iconMarginLeft;
+                
+                titleWrapper.Add(iconImage);
+            }
+            
+            // Create property field
+            var propertyField = new PropertyField(property);
+            propertyField.schedule.Execute(() =>
+            {
+                // Unwrap property field wrapper
+                propertyField.UnwrapElement(out var parent);
+                
+                // Add decorative elements inside top/bottom decorator drawers container
+                if (attribute.Bottom)
+                    parent.AddToBottomDecoratorContainer(titleWrapper);
+                else
+                    parent.AddToDecoratorContainer(titleWrapper);
+            });
+            
+            return propertyField;
+        }
+        
+        
+        private static FontStyle GetFontStyleByTitleStyle(TitleStyle titleStyle, FontStyle defaultFontStyle)
+        {
+            return titleStyle switch
+            {
+                TitleStyle.Normal => FontStyle.Normal,
+                TitleStyle.Bold => FontStyle.Bold,
+                TitleStyle.Italic => FontStyle.Italic,
+                TitleStyle.BoldAndItalic => FontStyle.BoldAndItalic,
+                
+                TitleStyle.DefaultItalic =>
+                    defaultFontStyle == FontStyle.Normal ? FontStyle.Italic
+                    : defaultFontStyle == FontStyle.Bold ? FontStyle.BoldAndItalic
+                    : defaultFontStyle,
+                
+                _ => defaultFontStyle
+            };
+        }
+        
+        private static TextAnchor GetMiddleAnchorByAlign(Align align)
+        {
+            return align switch
+            {
+                Align.Left => TextAnchor.MiddleLeft,
+                Align.Center => TextAnchor.MiddleCenter,
+                Align.Right => TextAnchor.MiddleRight,
+                _ => TextAnchor.MiddleLeft
+            };
+        }
+        
+        private static TextAnchor GetLowerAnchorByAlign(Align align)
+        {
+            return align switch
+            {
+                Align.Left => TextAnchor.LowerLeft,
+                Align.Center => TextAnchor.LowerCenter,
+                Align.Right => TextAnchor.LowerRight,
+                _ => TextAnchor.LowerLeft
+            };
+        }
+        
+    }
+}
+#endif

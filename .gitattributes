@@ -1,0 +1,14 @@
+# Keep these files to use LF as it normally uses
+# Prevent these files from being automatically converted to CRLF (Windows CRLF setting)
+
+# Unity YAML-serialized files
+*.unity     text eol=lf
+*.prefab    text eol=lf
+*.asset     text eol=lf
+*.meta      text eol=lf
+*.mat       text eol=lf
+*.anim      text eol=lf
+*.controller text eol=lf
+
+# JSON files
+*.asmdef    text eol=lf
