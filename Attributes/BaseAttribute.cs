@@ -29,6 +29,8 @@ namespace AstrotypeInspector
             set => base.order = AttributePriority.DecorativeAttribute + value;
         }
         
+        public bool bottom { get; set; } = false;
+        
         protected DecorativeAttribute() : base(applyToCollection: false) { }
         protected DecorativeAttribute(bool applyToCollection) : base(applyToCollection) { }
     }
