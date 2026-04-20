@@ -14,8 +14,6 @@ namespace AstrotypeInspector
         public readonly FontStyle Style = FontStyle.Normal;
         public readonly Align Align = Align.Left;
         
-        public bool Bottom { get; set; } = false;
-        
         public SubtitleAttribute(string subtitle,
             FontStyle style = FontStyle.Normal, Align align = Align.Left) : base(true)
         {
@@ -173,7 +171,7 @@ namespace AstrotypeInspector.Editor
                 propertyField.UnwrapElement(out var parent);
                 
                 // Add decorative elements inside top/bottom decorator drawers container
-                if (attribute.Bottom)
+                if (attribute.bottom)
                     parent.AddToBottomDecoratorContainer(subtitleWrapper);
                 else
                     parent.AddToDecoratorContainer(subtitleWrapper);

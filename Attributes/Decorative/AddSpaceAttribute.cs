@@ -10,8 +10,6 @@ namespace AstrotypeInspector
     {
         public readonly float Height;
         
-        public bool Bottom { get; set; } = false;
-        
         public AddSpaceAttribute(float height = 8f)
         {
             Height = height;
@@ -63,7 +61,7 @@ namespace AstrotypeInspector.Editor
                 propertyField.UnwrapElement(out var parent);
                 
                 // Add decorative elements inside top/bottom decorator drawers container
-                if (attribute.Bottom)
+                if (attribute.bottom)
                     parent.AddToBottomDecoratorContainer(emptySpace);
                 else
                     parent.AddToDecoratorContainer(emptySpace);

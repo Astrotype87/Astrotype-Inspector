@@ -12,8 +12,6 @@ namespace AstrotypeInspector
         public readonly float MarginTop;
         public readonly float MarginBottom;
         
-        public bool Bottom { get; set; } = false;
-        
         public SeparatorAttribute(float height = -1, float marginTop = -1, float marginBottom = -1) : base(true)
         {
             Height = height < 0 ? 2f : height;
@@ -103,7 +101,7 @@ namespace AstrotypeInspector.Editor
                 propertyField.UnwrapElement(out var parent);
                 
                 // Add decorative elements inside top/bottom decorator drawers container
-                if (attribute.Bottom)
+                if (attribute.bottom)
                     parent.AddToBottomDecoratorContainer(separatorLine);
                 else
                     parent.AddToDecoratorContainer(separatorLine);

@@ -15,7 +15,7 @@ namespace AstrotypeInspector.Demo
         public bool useAdvancedSettings;
         
         
-        [Separator(Bottom = true)]
+        [Separator(bottom = true)]
         [AddSpace(10)]
         [Subtitle("Transform Settings", Icon.Transform)]
         [Header("Spawn Configuration")]
@@ -36,7 +36,7 @@ namespace AstrotypeInspector.Demo
         [Range(0f, 50f)]
         public float acceleration = 10f;
         
-        [InfoBox("Debug mode is enabled.", InfoType.Info, nameof(showDebug), Bottom = true)]
+        [InfoBox("Debug mode is enabled.", InfoType.Info, nameof(showDebug), bottom = true)]
         public bool showDebug = true;
         
         
@@ -49,7 +49,7 @@ namespace AstrotypeInspector.Demo
         public int maxHealth = 100;
         
         [InfoBox("Health exceeds max health!", InfoType.Warning, nameof(IsHealthOverflow))]
-        [InfoBox("Everything looks good.", InfoType.None, nameof(IsHealthValid), Bottom = true)]
+        [InfoBox("Everything looks good.", InfoType.None, nameof(IsHealthValid), bottom = true)]
         public string statusMessage = "OK";
         
         
@@ -70,7 +70,7 @@ namespace AstrotypeInspector.Demo
         
         [SerializeField] private Vector3 currentVelocity;
         
-        [InfoBox("Careful tweaking these values.", InfoType.Warning, nameof(useAdvancedSettings), Bottom = true)]
+        [InfoBox("Careful tweaking these values.", InfoType.Warning, nameof(useAdvancedSettings), bottom = true)]
         [SerializeField] private bool isGrounded;
         
         

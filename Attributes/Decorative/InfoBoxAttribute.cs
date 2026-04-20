@@ -13,8 +13,6 @@ namespace AstrotypeInspector
         public readonly string ShowIf;
         public readonly float Height;
         
-        public bool Bottom { get; set; } = false;
-        
         public InfoBoxAttribute(string message, InfoType infoType = InfoType.Info, string showIf = default, float height = -1f)
         {
             Message = message;
@@ -128,7 +126,7 @@ namespace AstrotypeInspector.Editor
                 propertyField.UnwrapElement(out var parent);
                 
                 // Add decorative elements inside top/bottom decorator drawers container
-                if (attribute.Bottom)
+                if (attribute.bottom)
                     parent.AddToBottomDecoratorContainer(helpBox);
                 else
                     parent.AddToDecoratorContainer(helpBox);
