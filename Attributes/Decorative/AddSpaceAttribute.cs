@@ -6,7 +6,7 @@ namespace AstrotypeInspector
 {
     [Conditional(Symbols.UNITY_EDITOR), Conditional(Symbols.INCLUDE_IN_BUILD)]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
-    public sealed class AddSpaceAttribute : PropertyAttribute, IDecorativeAttribute
+    public sealed class AddSpaceAttribute : DecorativeAttribute
     {
         public readonly float Height;
         

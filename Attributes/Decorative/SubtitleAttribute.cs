@@ -6,7 +6,7 @@ namespace AstrotypeInspector
 {
     [Conditional(Symbols.UNITY_EDITOR), Conditional(Symbols.INCLUDE_IN_BUILD)]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
-    public sealed class SubtitleAttribute : PropertyAttribute, IDecorativeAttribute
+    public sealed class SubtitleAttribute : DecorativeAttribute
     {
         public readonly string Subtitle = null;
         public readonly Icon Icon = Icon._NONE;

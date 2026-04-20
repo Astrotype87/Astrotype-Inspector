@@ -6,7 +6,7 @@ namespace AstrotypeInspector
 {
     [Conditional(Symbols.UNITY_EDITOR), Conditional(Symbols.INCLUDE_IN_BUILD)]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
-    public sealed class InfoBoxAttribute : PropertyAttribute, IDecorativeAttribute
+    public sealed class InfoBoxAttribute : DecorativeAttribute
     {
         public readonly string Message;
         public readonly InfoType InfoType;
