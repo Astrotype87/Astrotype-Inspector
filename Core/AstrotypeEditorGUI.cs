@@ -4,6 +4,9 @@ namespace AstrotypeInspector.Editor
     using System;
     using UnityEngine.UIElements;
     
+    /// <summary>
+    /// Collection of IMGUI and UIToolkit helper functions.
+    /// </summary>
     public static class AstrotypeEditorGUI
     {
         /// <summary>
