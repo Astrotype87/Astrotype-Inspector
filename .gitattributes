@@ -12,3 +12,6 @@
 
 # JSON files
 *.asmdef    text eol=lf
+
+# Ignore Demo folder
+/Demo
