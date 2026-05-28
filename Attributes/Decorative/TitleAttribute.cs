@@ -16,8 +16,6 @@ namespace AstrotypeInspector
         public readonly Align Align = Align.Left;
         public readonly bool Separator = false;
         
-        public bool Bottom { get; set; } = false;
-        
         internal bool HasSubtitle => !string.IsNullOrWhiteSpace(Subtitle);
         
         
@@ -188,7 +186,7 @@ namespace AstrotypeInspector.Editor
                 propertyField.UnwrapElement(out var parent);
                 
                 // Add decorative elements inside top/bottom decorator drawers container
-                if (attribute.Bottom)
+                if (attribute.bottom)
                     parent.AddToBottomDecoratorContainer(titleWrapper);
                 else
                     parent.AddToDecoratorContainer(titleWrapper);
