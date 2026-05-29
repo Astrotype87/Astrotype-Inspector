@@ -133,7 +133,7 @@ namespace AstrotypeInspector.Editor
         }
         
         /// <summary>
-        /// Creates a container specifically for wrapping multiple decorative elements before being added to a decorator drawers container.<br/>
+        /// Creates a container for wrapping decorative elements before being added to a decorator drawers container.<br/>
         /// The child-targeted styling of <c>unity-decorator-drawers-container</c> is preserved for the child elements of this container.
         /// </summary>
         /// <param name="name">The element name of the wrapper.</param>

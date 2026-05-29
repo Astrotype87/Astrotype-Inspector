@@ -183,6 +183,44 @@ namespace AstrotypeInspector.Editor
                 titleWrapper.Add(iconImage);
             }
             
+            // Create subtitle label
+            if (!string.IsNullOrWhiteSpace(attribute.Subtitle))
+            {
+                var subtitleLabel = new Label(attribute.Subtitle);
+                subtitleLabel.style.fontSize = EditorStyles.miniLabel.fontSize;
+                subtitleLabel.style.unityFontStyleAndWeight = GetFontStyleByTitleStyle(attribute.Style, EditorStyles.miniLabel.fontStyle);
+                subtitleLabel.style.unityTextAlign = GetLowerAnchorByAlign(attribute.Align);
+                
+                Color subtitleColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
+                subtitleColor.a *= 0.4f;
+                subtitleLabel.style.color = subtitleColor;
+                
+                subtitleLabel.style.marginTop = 2f;
+                subtitleLabel.style.marginBottom = 1f;
+                if (iconTexture != null)
+                    subtitleLabel.style.marginLeft = iconSize + iconMarginLeft;
+                
+                titleWrapper.Add(subtitleLabel);
+            }
+            
+            // Create separator line
+            if (attribute.Separator)
+            {
+                var separatorLine = new VisualElement();
+                Color separatorColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
+                separatorColor.a *= 0.15f;
+                separatorLine.style.backgroundColor = separatorColor;
+                
+                float separatorHeight = 2;
+                separatorLine.style.borderTopWidth = Mathf.Ceil(separatorHeight / 2);
+                separatorLine.style.borderBottomWidth = Mathf.Floor(separatorHeight / 2);
+                separatorLine.style.marginTop = 2;
+                separatorLine.style.marginBottom = 2;
+                
+                titleWrapper.Add(separatorLine);
+            }
+            
+            
             // Create property field
             var propertyField = new PropertyField(property);
             propertyField.schedule.Execute(() =>
