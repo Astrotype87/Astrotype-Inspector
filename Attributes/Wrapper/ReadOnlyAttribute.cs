@@ -8,10 +8,7 @@ namespace AstrotypeInspector
     [AttributeUsage(AttributeTargets.Field)]
     public sealed class ReadOnlyAttribute : WrapperAttribute
     {
-        public ReadOnlyAttribute() : base(true)
-        {
-            order = 0;
-        }
+        public ReadOnlyAttribute() : base(true) { }
     }
 }
 

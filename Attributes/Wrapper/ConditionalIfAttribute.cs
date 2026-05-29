@@ -22,14 +22,12 @@ namespace AstrotypeInspector
         
         protected ConditionalIfAttribute(string boolExpression) : base(true)
         {
-            order = 0;
             Type = ConditionType.BoolExpression;
             BoolExpression = boolExpression;
         }
         
         protected ConditionalIfAttribute(string enumMemberName, params object[] enumMatchValues) : base(true)
         {
-            order = 0;
             Type = ConditionType.EnumMatchValues;
             EnumMemberName = enumMemberName;
             EnumMatchValues = enumMatchValues;
@@ -37,7 +35,6 @@ namespace AstrotypeInspector
         
         protected ConditionalIfAttribute(BoolGroup boolOperation, params string[] boolExpressions) : base(true)
         {
-            order = 0;
             Type = ConditionType.BoolExpressionGroup;
             BoolOperation = boolOperation;
             BoolExpressions = boolExpressions;

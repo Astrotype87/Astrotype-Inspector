@@ -20,40 +20,34 @@ namespace AstrotypeInspector
         
         protected ConditionalInAttribute(InEditor inEditor) : base(true)
         {
-            order = 0;
             InEditor = inEditor;
         }
         
         protected ConditionalInAttribute(InAsset inAsset) : base(true)
         {
-            order = 0;
             InAsset = inAsset;
         }
         
         protected ConditionalInAttribute(InPrefab inPrefab) : base(true)
         {
-            order = 0;
             InPrefab = inPrefab;
         }
         
         
         protected ConditionalInAttribute(InEditor inEditor, InAsset inAsset) : base(true)
         {
-            order = 0;
             InEditor = inEditor;
             InAsset = inAsset;
         }
         
         protected ConditionalInAttribute(InAsset inAsset, InPrefab inPrefab) : base(true)
         {
-            order = 0;
             InAsset = inAsset;
             InPrefab = inPrefab;
         }
         
         protected ConditionalInAttribute(InEditor inEditor, InPrefab inPrefab) : base(true)
         {
-            order = 0;
             InEditor = inEditor;
             InPrefab = inPrefab;
         }
@@ -61,7 +55,6 @@ namespace AstrotypeInspector
         
         protected ConditionalInAttribute(InEditor inEditor, InAsset inAsset, InPrefab inPrefab) : base(true)
         {
-            order = 0;
             InEditor = inEditor;
             InAsset = inAsset;
             InPrefab = inPrefab;
@@ -69,7 +62,6 @@ namespace AstrotypeInspector
         
         protected ConditionalInAttribute(BoolGroup boolGroup, params object[] enumValues) : base(true)
         {
-            order = 0;
             IsEnumGroup = true;
             BoolGroup = boolGroup;
             EnumValues = enumValues;

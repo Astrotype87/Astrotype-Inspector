@@ -13,8 +13,11 @@ namespace AstrotypeInspector
             set => base.order = AttributePriority.PostPropertyAttribute + value;
         }
         
-        protected PostPropertyAttribute() : base(applyToCollection: false) { }
-        protected PostPropertyAttribute(bool applyToCollection) : base(applyToCollection) { }
+        protected PostPropertyAttribute() : base(applyToCollection: false)
+            => order = 0;
+        
+        protected PostPropertyAttribute(bool applyToCollection) : base(applyToCollection)
+            => order = 0;
     }
     
     /// <summary>
@@ -35,8 +38,11 @@ namespace AstrotypeInspector
         /// </summary>
         public bool bottom { get; set; } = false;
         
-        protected DecorativeAttribute() : base(applyToCollection: false) { }
-        protected DecorativeAttribute(bool applyToCollection) : base(applyToCollection) { }
+        protected DecorativeAttribute() : base(applyToCollection: false)
+            => order = 0;
+        
+        protected DecorativeAttribute(bool applyToCollection) : base(applyToCollection)
+            => order = 0;
     }
     
     /// <summary>
@@ -51,8 +57,11 @@ namespace AstrotypeInspector
             set => base.order = AttributePriority.WrapperAttribute + value;
         }
         
-        protected WrapperAttribute() : base(applyToCollection: false) { }
-        protected WrapperAttribute(bool applyToCollection) : base(applyToCollection) { }
+        protected WrapperAttribute() : base(applyToCollection: false)
+            => order = 0;
+        
+        protected WrapperAttribute(bool applyToCollection) : base(applyToCollection)
+            => order = 0;
     }
     
     /// <summary>
@@ -61,8 +70,11 @@ namespace AstrotypeInspector
     /// </summary>
     public abstract class GroupAttribute : PropertyAttribute
     {
-        protected GroupAttribute() : base(applyToCollection: false) { }
-        protected GroupAttribute(bool applyToCollection) : base(applyToCollection) { }
+        protected GroupAttribute() : base(applyToCollection: false)
+            => order = 0;
+        
+        protected GroupAttribute(bool applyToCollection) : base(applyToCollection)
+            => order = 0;
     }
     
     
