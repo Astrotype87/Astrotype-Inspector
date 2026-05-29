@@ -150,19 +150,23 @@ namespace AstrotypeInspector.Editor
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return IsVisible(property)
+            return IsVisible(property, attribute as ConditionalInAttribute)
                 ? EditorGUI.GetPropertyHeight(property, label, true)
                 : -EditorGUIUtility.standardVerticalSpacing;
         }
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            (bool isVisible, bool isEnabled) = IsVisibleAndEnabled(property);
-            if (!isVisible) return;
+            var attribute = this.attribute as ConditionalInAttribute;
+            bool isVisible = IsVisible(property, attribute);
+            bool isEnabled = IsEnabled(property, attribute);
             
-            EditorGUI.BeginDisabledGroup(!isEnabled);
-            EditorGUI.PropertyField(position, property, label, true);
-            EditorGUI.EndDisabledGroup();
+            if (isVisible)
+            {
+                EditorGUI.BeginDisabledGroup(!isEnabled);
+                EditorGUI.PropertyField(position, property, label, true);
+                EditorGUI.EndDisabledGroup();
+            }
         }
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
@@ -177,7 +181,10 @@ namespace AstrotypeInspector.Editor
                 if (property.serializedObject == null) return;
                 if (property.serializedObject.targetObject == null) return;
                 
-                (bool isVisible, bool isEnabled) = IsVisibleAndEnabled(property);
+                var attribute = this.attribute as ConditionalInAttribute;
+                bool isVisible = IsVisible(property, attribute);
+                bool isEnabled = IsEnabled(property, attribute);
+                
                 propertyField.style.display = isVisible ? DisplayStyle.Flex : DisplayStyle.None;
                 propertyField.SetEnabled(isEnabled);
             }
@@ -197,31 +204,17 @@ namespace AstrotypeInspector.Editor
         }
         
         
-        private (bool, bool) IsVisibleAndEnabled(SerializedProperty property)
+        // PRIVATE STATIC MEMBERS
+        private static bool IsVisible(SerializedProperty property, ConditionalInAttribute attribute)
         {
-            bool isVisible = true;
-            bool isEnabled = true;
-            
-            var attribute = this.attribute as ConditionalInAttribute;
-            bool condition = EvaluateCondition(property, attribute);
-            
-            if (attribute is ShowInAttribute) isVisible = condition;
-            else if (attribute is HideInAttribute) isVisible = !condition;
-            else if (attribute is EnableInAttribute) isEnabled = condition;
-            else if (attribute is DisableInAttribute) isEnabled = !condition;
-            
-            return (isVisible, isEnabled);
+            return attribute is not ShowInAttribute and not HideInAttribute
+                || EvaluateCondition(property, attribute);
         }
         
-        private bool IsVisible(SerializedProperty property)
+        private static bool IsEnabled(SerializedProperty property, ConditionalInAttribute attribute)
         {
-            var attribute = this.attribute as ConditionalInAttribute;
-            bool condition = EvaluateCondition(property, attribute);
-            
-            if (attribute is ShowInAttribute) return condition;
-            if (attribute is HideInAttribute) return !condition;
-            
-            return true;
+            return attribute is not EnableInAttribute and not DisableInAttribute
+                || EvaluateCondition(property, attribute);
         }
         
         
