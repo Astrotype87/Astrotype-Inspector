@@ -87,30 +87,22 @@ namespace AstrotypeInspector.Editor
     using UnityEditor.UIElements;
     
     using ConditionType = ConditionalIfAttribute.ConditionType;
-    using System.Linq;
-
+    
     [CustomPropertyDrawer(typeof(ConditionalIfAttribute), true)]
     public class ConditionalIfDrawer : PropertyDrawer
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            object targetObject = property.serializedObject.targetObject;
-            string relativePath = GetRelativePath(property);
-            var attribute = this.attribute as ConditionalIfAttribute;
-            
-            return IsVisible(targetObject, relativePath, attribute)
+            return IsVisible(property, attribute as ConditionalIfAttribute)
                 ? EditorGUI.GetPropertyHeight(property, label, true)
                 : -EditorGUIUtility.standardVerticalSpacing;
         }
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            object targetObject = property.serializedObject.targetObject;
-            string relativePath = GetRelativePath(property);
             var attribute = this.attribute as ConditionalIfAttribute;
-            
-            bool isVisible = IsVisible(targetObject, relativePath, attribute);
-            bool isEnabled = IsEnabled(targetObject, relativePath, attribute);
+            bool isVisible = IsVisible(property, attribute);
+            bool isEnabled = IsEnabled(property, attribute);
             
             if (isVisible)
             {
@@ -125,10 +117,6 @@ namespace AstrotypeInspector.Editor
             var propertyField = new PropertyField(property);
             propertyField.name = "conditional-if-wrapper";
             
-            object targetObject = property.serializedObject.targetObject;
-            string relativePath = GetRelativePath(property);
-            var attribute = this.attribute as ConditionalIfAttribute;
-            
             // Define property field update for editor update events
             void UpdatePropertyField()
             {
@@ -136,8 +124,9 @@ namespace AstrotypeInspector.Editor
                 if (property.serializedObject == null) return;
                 if (property.serializedObject.targetObject == null) return;
                 
-                bool isVisible = IsVisible(targetObject, relativePath, attribute);
-                bool isEnabled = IsEnabled(targetObject, relativePath, attribute);
+                var attribute = this.attribute as ConditionalIfAttribute;
+                bool isVisible = IsVisible(property, attribute);
+                bool isEnabled = IsEnabled(property, attribute);
                 
                 propertyField.style.display = isVisible ? DisplayStyle.Flex : DisplayStyle.None;
                 propertyField.SetEnabled(isEnabled);
@@ -152,6 +141,24 @@ namespace AstrotypeInspector.Editor
         
         
         // PRIVATE STATIC MEMBERS
+        private static bool IsVisible(SerializedProperty property, ConditionalIfAttribute attribute)
+        {
+            object targetObject = property.serializedObject.targetObject;
+            string relativePath = GetRelativePath(property);
+            
+            return attribute is not ShowIfAttribute and not HideIfAttribute
+                || EvaluateCondition(targetObject, relativePath, attribute);
+        }
+        
+        private static bool IsEnabled(SerializedProperty property, ConditionalIfAttribute attribute)
+        {
+            object targetObject = property.serializedObject.targetObject;
+            string relativePath = GetRelativePath(property);
+            
+            return attribute is not EnableIfAttribute and not DisableIfAttribute
+                || EvaluateCondition(targetObject, relativePath, attribute);
+        }
+        
         private static string GetRelativePath(SerializedProperty property)
         {
             string propertyPath = property.propertyPath;
@@ -160,18 +167,6 @@ namespace AstrotypeInspector.Editor
             return propertyPath.LastIndexOf('.') > 0
                 ? propertyPath[..lastDotIndex]
                 : string.Empty;
-        }
-        
-        private static bool IsVisible(object targetObject, string relativePath, ConditionalIfAttribute attribute)
-        {
-            return attribute is not ShowIfAttribute and not HideIfAttribute
-                || EvaluateCondition(targetObject, relativePath, attribute);
-        }
-        
-        private static bool IsEnabled(object targetObject, string relativePath, ConditionalIfAttribute attribute)
-        {
-            return attribute is not EnableIfAttribute and not DisableIfAttribute
-                || EvaluateCondition(targetObject, relativePath, attribute);
         }
         
         
