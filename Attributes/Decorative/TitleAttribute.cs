@@ -87,11 +87,27 @@ namespace AstrotypeInspector.Editor
         private float iconSize = EditorGUIUtility.singleLineHeight - 2f;
         private float iconMarginRight = 1f;
         
+        private float subtitleHeight = EditorGUIUtility.singleLineHeight - 3f - 2f;
+        private float subtitleMarginBottom = 1f + 1f;
+        
+        private float separatorMarginTop = 3f - EditorGUIUtility.standardVerticalSpacing;
+        private float separatorHeight = 1.5f;
+        private float separatorMarginBottom = 3.5f;
+        
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return titleMarginTop + titleHeight
-                + EditorGUI.GetPropertyHeight(property, label, true);
+            TitleAttribute attribute = this.attribute as TitleAttribute;
+            
+            float height = EditorGUI.GetPropertyHeight(property, label, true);
+            height += titleMarginTop + titleHeight;
+            
+            if (!string.IsNullOrWhiteSpace(attribute.Subtitle))
+                height += subtitleHeight + subtitleMarginBottom;
+            if (attribute.Separator)
+                height += separatorMarginTop + separatorHeight + separatorMarginBottom;
+            
+            return height;
         }
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -134,10 +150,56 @@ namespace AstrotypeInspector.Editor
                 GUI.Label(iconRect, new GUIContent(iconTexture), iconStyle);
             }
             
+            // Draw subtitle label
+            bool hasSubtitle = !string.IsNullOrWhiteSpace(attribute.Subtitle);
+            if (hasSubtitle)
+            {
+                // Create subtitle style
+                GUIStyle subtitleStyle = new(EditorStyles.miniLabel);
+                subtitleStyle.fontStyle = GetFontStyleByTitleStyle(attribute.Style, EditorStyles.miniLabel.fontStyle);
+                subtitleStyle.alignment = GetMiddleAnchorByAlign(attribute.Align);  // EditorStyles.boldLabel style uses Middle for text anchor
+                subtitleStyle.normal.textColor = SetAlpha(subtitleStyle.normal.textColor, 0.6f);
+                subtitleStyle.hover.textColor = SetAlpha(subtitleStyle.hover.textColor, 0.6f);
+                
+                // Calculate side offset, used to reduce remaining margin based on alignment
+                float sideOffset = attribute.Align == Align.Left ? -0.5f :
+                    attribute.Align == Align.Right ? 0.5f : 0f;
+                subtitleStyle.contentOffset = new(sideOffset, subtitleStyle.contentOffset.y);
+                
+                // Draw subtitle label
+                Rect subtitleRect = position;
+                subtitleRect.y += titleMarginTop + titleHeight + offsetIfBottom;
+                subtitleRect.height = subtitleHeight;
+                GUI.Label(subtitleRect, new GUIContent(attribute.Subtitle), subtitleStyle);
+            }
+            
+            // Draw separator line
+            if (attribute.Separator)
+            {
+                // Separator color
+                Color separatorColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
+                separatorColor.a *= 0.15f;
+                
+                // Draw separator line
+                Rect separatorRect = position;
+                separatorRect.y += titleMarginTop + titleHeight + separatorMarginTop + offsetIfBottom;
+                if (hasSubtitle)
+                    separatorRect.y += subtitleHeight + subtitleMarginBottom;
+                separatorRect.height = separatorHeight;
+                
+                EditorGUI.DrawRect(separatorRect, separatorColor);
+            }
+            
             // Draw property field
             Rect propertyRect = position;
             if (!attribute.bottom)
+            {
                 propertyRect.y += titleMarginTop + titleHeight;
+                if (hasSubtitle)
+                    propertyRect.y += subtitleHeight + subtitleMarginBottom;
+                if (attribute.Separator)
+                    propertyRect.y += separatorMarginTop + separatorHeight + separatorMarginBottom;
+            }
             
             EditorGUI.PropertyField(propertyRect, property, label, true);
         }
@@ -197,8 +259,6 @@ namespace AstrotypeInspector.Editor
                 
                 subtitleLabel.style.marginTop = 2f;
                 subtitleLabel.style.marginBottom = 1f;
-                if (iconTexture != null)
-                    subtitleLabel.style.marginLeft = iconSize + iconMarginLeft;
                 
                 titleWrapper.Add(subtitleLabel);
             }
@@ -277,6 +337,11 @@ namespace AstrotypeInspector.Editor
                 Align.Right => TextAnchor.LowerRight,
                 _ => TextAnchor.LowerLeft
             };
+        }
+        
+        private static Color SetAlpha(Color color, float alpha)
+        {
+            return new(color.r, color.g, color.b, color.a * alpha);
         }
         
     }

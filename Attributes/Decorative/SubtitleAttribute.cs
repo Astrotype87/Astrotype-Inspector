@@ -50,12 +50,12 @@ namespace AstrotypeInspector.Editor
     public class SubtitleDrawer : PropertyDrawer
     {
         // IMGUI height settings
-        float subtitleHeight = EditorGUIUtility.singleLineHeight - 3f - 2f;
-        float subtitleMarginBottom = 1f + 1f;
+        private float subtitleHeight = EditorGUIUtility.singleLineHeight - 3f - 2f;
+        private float subtitleMarginBottom = 1f + 1f;
         
-        float iconMarginTop = 0f;
-        float iconSize = EditorGUIUtility.singleLineHeight - 3f - 2f;
-        float iconMarginRight = 1f;
+        private float iconMarginTop = 0f;
+        private float iconSize = EditorGUIUtility.singleLineHeight - 3f - 2f;
+        private float iconMarginRight = 1f;
         
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
