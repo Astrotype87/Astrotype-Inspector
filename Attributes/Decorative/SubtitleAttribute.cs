@@ -68,6 +68,9 @@ namespace AstrotypeInspector.Editor
         {
             SubtitleAttribute attribute = this.attribute as SubtitleAttribute;
             Texture iconTexture = IconDictionary.GetIconTexture(attribute.Icon);
+            float offsetIfBottom = attribute.bottom
+                ? EditorGUI.GetPropertyHeight(property) + EditorGUIUtility.standardVerticalSpacing
+                : 0;
             
             // Create subtitle style
             GUIStyle subtitleStyle = new(EditorStyles.miniLabel);
@@ -83,6 +86,7 @@ namespace AstrotypeInspector.Editor
             
             // Draw subtitle label
             Rect subtitleRect = position;
+            subtitleRect.y += offsetIfBottom;
             subtitleRect.height = subtitleHeight;
             if (iconTexture != null) // Leave space for icon
             {
@@ -102,13 +106,16 @@ namespace AstrotypeInspector.Editor
             
                 // Draw icon image
                 Rect iconRect = position;
+                iconRect.y += offsetIfBottom;
                 iconRect.height = subtitleHeight;
                 GUI.Label(iconRect, new GUIContent(iconTexture), iconStyle);
             }
             
             // Draw property field
             Rect propertyRect = position;
-            propertyRect.y += subtitleHeight + subtitleMarginBottom;
+            if (!attribute.bottom)
+                propertyRect.y += subtitleHeight + subtitleMarginBottom;
+            
             EditorGUI.PropertyField(propertyRect, property, label, true);
         }
         

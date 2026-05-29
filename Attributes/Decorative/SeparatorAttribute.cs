@@ -51,19 +51,26 @@ namespace AstrotypeInspector.Editor
         {
             UpdateIMGUISeparatorHeight();
             
+            SeparatorAttribute attribute = this.attribute as SeparatorAttribute;
+            float offsetIfBottom = attribute.bottom
+                ? EditorGUI.GetPropertyHeight(property) + EditorGUIUtility.standardVerticalSpacing
+                : 0;
+            
             // Separator color
             Color separatorColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
             separatorColor.a *= 0.15f;
             
             // Draw separator line
             Rect separatorRect = position;
-            separatorRect.y += separatorMarginTop;
+            separatorRect.y += separatorMarginTop + offsetIfBottom;
             separatorRect.height = separatorHeight;
             EditorGUI.DrawRect(separatorRect, separatorColor);
             
             // Draw property field
             Rect propertyRect = position;
-            propertyRect.y += separatorMarginTop + separatorHeight + separatorMarginBottom;
+            if (!attribute.bottom)
+                propertyRect.y += separatorMarginTop + separatorHeight + separatorMarginBottom;
+            
             EditorGUI.PropertyField(propertyRect, property, label, true);
         }
         

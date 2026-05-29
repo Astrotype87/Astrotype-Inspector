@@ -40,7 +40,9 @@ namespace AstrotypeInspector.Editor
             
             // Draw property field
             Rect propertyRect = position;
-            propertyRect.y += attribute.Height;
+            if (!attribute.bottom)
+                propertyRect.y += attribute.Height;
+            
             EditorGUI.PropertyField(propertyRect, property, label, true);
         }
         

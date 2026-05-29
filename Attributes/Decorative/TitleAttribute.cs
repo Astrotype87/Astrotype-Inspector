@@ -98,6 +98,9 @@ namespace AstrotypeInspector.Editor
         {
             TitleAttribute attribute = this.attribute as TitleAttribute;
             Texture iconTexture = IconDictionary.GetIconTexture(attribute.Icon);
+            float offsetIfBottom = attribute.bottom
+                ? EditorGUI.GetPropertyHeight(property) + EditorGUIUtility.standardVerticalSpacing
+                : 0;
             
             // Create title style
             GUIStyle titleStyle = new(EditorStyles.boldLabel);
@@ -106,7 +109,7 @@ namespace AstrotypeInspector.Editor
             
             // Draw title label
             Rect titleRect = position;
-            titleRect.y += titleMarginTop;
+            titleRect.y += titleMarginTop + offsetIfBottom;
             titleRect.height = titleHeight;
             if (iconTexture != null) // Leave space for icon
             {
@@ -126,14 +129,16 @@ namespace AstrotypeInspector.Editor
                 
                 // Draw icon image
                 Rect iconRect = position;
-                iconRect.y += titleMarginTop;
+                iconRect.y += titleMarginTop + offsetIfBottom;
                 iconRect.height = titleHeight;
                 GUI.Label(iconRect, new GUIContent(iconTexture), iconStyle);
             }
             
             // Draw property field
             Rect propertyRect = position;
-            propertyRect.y += titleMarginTop + titleHeight;
+            if (!attribute.bottom)
+                propertyRect.y += titleMarginTop + titleHeight;
+            
             EditorGUI.PropertyField(propertyRect, property, label, true);
         }
         

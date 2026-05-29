@@ -61,6 +61,9 @@ namespace AstrotypeInspector.Editor
             MessageType messageType = GetMessageType(attribute.InfoType);
             bool showHelpBox = string.IsNullOrEmpty(attribute.ShowIf) || EvaluateCondition(property, attribute.ShowIf);
             
+            float offsetIfBottom = attribute.bottom
+                ? EditorGUI.GetPropertyHeight(property) + EditorGUIUtility.standardVerticalSpacing
+                : 0;
             float helpBoxHeight = showHelpBox
                 ? attribute.Height >= 0
                     ? attribute.Height
@@ -74,14 +77,16 @@ namespace AstrotypeInspector.Editor
             if (showHelpBox)
             {
                 Rect helpBoxRect = position;
+                helpBoxRect.y += offsetIfBottom;
                 helpBoxRect.height = helpBoxHeight;
                 EditorGUI.HelpBox(helpBoxRect, attribute.Message, messageType);
             }
             
             // Draw property field
             Rect propertyRect = position;
-            if (showHelpBox)
+            if (showHelpBox && !attribute.bottom)
                 propertyRect.y += helpBoxHeight + spacing;
+            
             EditorGUI.PropertyField(propertyRect, property, label, true);
         }
         
