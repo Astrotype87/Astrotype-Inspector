@@ -76,7 +76,7 @@ namespace AstrotypeInspector.Editor
                 throw new ArgumentNullException(nameof(decorativeElements));
             
             // Get existing decorator container (created by Unity, or by this method)
-            var decoratorContainer = parent.Q(className: "unity-decorator-drawers-container");
+            var decoratorContainer = parent.Q(name: "", className: "unity-decorator-drawers-container");
             
             // If no decorator container is present, create new one and insert to top
             if (decoratorContainer == null)
