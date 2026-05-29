@@ -29,6 +29,10 @@ namespace AstrotypeInspector
             set => base.order = AttributePriority.DecorativeAttribute + value;
         }
         
+        /// <summary>
+        /// Consecutive decorative attributes with <c>bottom = true</c> option
+        /// are drawn in inspector by reverse/bottom-up order.
+        /// </summary>
         public bool bottom { get; set; } = false;
         
         protected DecorativeAttribute() : base(applyToCollection: false) { }

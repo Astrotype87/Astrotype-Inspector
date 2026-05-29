@@ -128,7 +128,7 @@ namespace AstrotypeInspector.Editor
             foreach (var element in decorativeElements)
             {
                 if (element != null)
-                    decoratorContainer.Add(element);
+                    decoratorContainer.Insert(0, element);
             }
         }
         
