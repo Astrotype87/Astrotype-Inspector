@@ -199,14 +199,18 @@ namespace AstrotypeInspector.Editor
         // PRIVATE STATIC MEMBERS
         private static bool IsVisible(SerializedProperty property, ConditionalInAttribute attribute)
         {
-            return attribute is not ShowInAttribute and not HideInAttribute
-                || EvaluateCondition(property, attribute);
+            bool condition = EvaluateCondition(property, attribute);
+            return attribute is ShowInAttribute ? condition
+                : attribute is HideInAttribute ? !condition
+                : true;
         }
         
         private static bool IsEnabled(SerializedProperty property, ConditionalInAttribute attribute)
         {
-            return attribute is not EnableInAttribute and not DisableInAttribute
-                || EvaluateCondition(property, attribute);
+            bool condition = EvaluateCondition(property, attribute);
+            return attribute is EnableInAttribute ? condition
+                : attribute is DisableInAttribute ? !condition
+                : true;
         }
         
         

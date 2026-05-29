@@ -143,8 +143,10 @@ namespace AstrotypeInspector.Editor
             object targetObject = property.serializedObject.targetObject;
             string relativePath = GetRelativePath(property);
             
-            return attribute is not ShowIfAttribute and not HideIfAttribute
-                || EvaluateCondition(targetObject, relativePath, attribute);
+            bool condition = EvaluateCondition(targetObject, relativePath, attribute);
+            return attribute is ShowIfAttribute ? condition
+                : attribute is HideIfAttribute ? !condition
+                : true;
         }
         
         private static bool IsEnabled(SerializedProperty property, ConditionalIfAttribute attribute)
@@ -152,8 +154,10 @@ namespace AstrotypeInspector.Editor
             object targetObject = property.serializedObject.targetObject;
             string relativePath = GetRelativePath(property);
             
-            return attribute is not EnableIfAttribute and not DisableIfAttribute
-                || EvaluateCondition(targetObject, relativePath, attribute);
+            bool condition = EvaluateCondition(targetObject, relativePath, attribute);
+            return attribute is EnableIfAttribute ? condition
+                : attribute is DisableIfAttribute ? !condition
+                : true;
         }
         
         private static string GetRelativePath(SerializedProperty property)
