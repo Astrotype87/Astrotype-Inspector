@@ -9,8 +9,8 @@ namespace AstrotypeInspector
     public sealed class TextAttribute : DecorativeAttribute
     {
         public readonly string Text = null;
-        public readonly FontStyle Style = FontStyle.Normal;
         public readonly int Size = -1;
+        public readonly FontStyle Style = FontStyle.Normal;
         public readonly Align Align = Align.Left;
         
         
@@ -20,18 +20,18 @@ namespace AstrotypeInspector
             Align = align;
         }
         
-        public TextAttribute(string text, int size, Align align = Align.Left)
-        {
-            Text = text;
-            Size = size;
-            Align = align;
-        }
-        
-        public TextAttribute(string text, FontStyle style = FontStyle.Normal, int size = -1, Align align = Align.Left)
+        public TextAttribute(string text, FontStyle style, Align align = Align.Left)
         {
             Text = text;
             Style = style;
+            Align = align;
+        }
+        
+        public TextAttribute(string text, int size = -1, FontStyle style = FontStyle.Normal, Align align = Align.Left)
+        {
+            Text = text;
             Size = size;
+            Style = style;
             Align = align;
         }
     }

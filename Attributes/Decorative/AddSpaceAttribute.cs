@@ -30,13 +30,13 @@ namespace AstrotypeInspector.Editor
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            AddSpaceAttribute attribute = this.attribute as AddSpaceAttribute;
+            var attribute = this.attribute as AddSpaceAttribute;
             return attribute.Height + EditorGUI.GetPropertyHeight(property, label, true);
         }
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            AddSpaceAttribute attribute = this.attribute as AddSpaceAttribute;
+            var attribute = this.attribute as AddSpaceAttribute;
             
             // Draw property field
             Rect propertyRect = position;
@@ -48,7 +48,7 @@ namespace AstrotypeInspector.Editor
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            AddSpaceAttribute attribute = this.attribute as AddSpaceAttribute;
+            var attribute = this.attribute as AddSpaceAttribute;
             
             // Create empty visual element
             var emptySpace = new VisualElement();

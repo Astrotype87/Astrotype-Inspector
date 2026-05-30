@@ -95,7 +95,7 @@ namespace AstrotypeInspector.Editor
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            TitleAttribute attribute = this.attribute as TitleAttribute;
+            var attribute = this.attribute as TitleAttribute;
             
             float height = EditorGUI.GetPropertyHeight(property, label, true);
             height += titleMarginTop + titleHeight;
@@ -110,7 +110,7 @@ namespace AstrotypeInspector.Editor
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            TitleAttribute attribute = this.attribute as TitleAttribute;
+            var attribute = this.attribute as TitleAttribute;
             Texture iconTexture = IconDictionary.GetIconTexture(attribute.Icon);
             float offsetIfBottom = attribute.bottom
                 ? EditorGUI.GetPropertyHeight(property) + EditorGUIUtility.standardVerticalSpacing
@@ -204,7 +204,7 @@ namespace AstrotypeInspector.Editor
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            TitleAttribute attribute = this.attribute as TitleAttribute;
+            var attribute = this.attribute as TitleAttribute;
             Texture iconTexture = IconDictionary.GetIconTexture(attribute.Icon);
             
             // UI Toolkit height settings

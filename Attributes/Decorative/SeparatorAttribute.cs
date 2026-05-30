@@ -51,7 +51,7 @@ namespace AstrotypeInspector.Editor
         {
             UpdateIMGUISeparatorHeight();
             
-            SeparatorAttribute attribute = this.attribute as SeparatorAttribute;
+            var attribute = this.attribute as SeparatorAttribute;
             float offsetIfBottom = attribute.bottom
                 ? EditorGUI.GetPropertyHeight(property) + EditorGUIUtility.standardVerticalSpacing
                 : 0;
@@ -76,7 +76,7 @@ namespace AstrotypeInspector.Editor
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            SeparatorAttribute attribute = this.attribute as SeparatorAttribute;
+            var attribute = this.attribute as SeparatorAttribute;
             
             // UI Toolkit height settings
             float separatorMarginTop = attribute.MarginTop;
@@ -119,7 +119,7 @@ namespace AstrotypeInspector.Editor
         
         private void UpdateIMGUISeparatorHeight()
         {
-            SeparatorAttribute attribute = this.attribute as SeparatorAttribute;
+            var attribute = this.attribute as SeparatorAttribute;
             
             separatorHeight = attribute.Height;
             separatorMarginTop = attribute.MarginTop + 1f - EditorGUIUtility.standardVerticalSpacing;

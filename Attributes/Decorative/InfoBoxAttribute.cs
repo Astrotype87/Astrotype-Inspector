@@ -39,7 +39,7 @@ namespace AstrotypeInspector.Editor
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            InfoBoxAttribute attribute = this.attribute as InfoBoxAttribute;
+            var attribute = this.attribute as InfoBoxAttribute;
             MessageType messageType = GetMessageType(attribute.InfoType);
             bool showHelpBox = string.IsNullOrWhiteSpace(attribute.ShowIf) || EvaluateCondition(property, attribute.ShowIf);
             
@@ -57,7 +57,7 @@ namespace AstrotypeInspector.Editor
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            InfoBoxAttribute attribute = this.attribute as InfoBoxAttribute;
+            var attribute = this.attribute as InfoBoxAttribute;
             MessageType messageType = GetMessageType(attribute.InfoType);
             bool showHelpBox = string.IsNullOrEmpty(attribute.ShowIf) || EvaluateCondition(property, attribute.ShowIf);
             
@@ -92,7 +92,7 @@ namespace AstrotypeInspector.Editor
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            InfoBoxAttribute attribute = this.attribute as InfoBoxAttribute;
+            var attribute = this.attribute as InfoBoxAttribute;
             HelpBoxMessageType messageType = GetHelpBoxMessageType(attribute.InfoType);
             
             // Create help box
