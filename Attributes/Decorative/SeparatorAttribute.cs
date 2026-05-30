@@ -94,7 +94,6 @@ namespace AstrotypeInspector.Editor
             
             separatorLine.style.borderTopWidth = Mathf.Ceil(separatorHeight / 2);
             separatorLine.style.borderBottomWidth = Mathf.Floor(separatorHeight / 2);
-            
             // separatorLine.style.height = separatorHeight;
             
             separatorLine.style.marginTop = separatorMarginTop;

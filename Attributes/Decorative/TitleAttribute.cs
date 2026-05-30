@@ -16,8 +16,6 @@ namespace AstrotypeInspector
         public readonly Align Align = Align.Left;
         public readonly bool Separator = false;
         
-        internal bool HasSubtitle => !string.IsNullOrWhiteSpace(Subtitle);
-        
         
         public TitleAttribute(string title,
             TitleStyle style = TitleStyle.Default, Align align = Align.Left, bool separator = false) : base(true)

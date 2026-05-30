@@ -105,7 +105,7 @@ namespace AstrotypeInspector
         BoldAndItalic
     }
     
-    /// <summary> Text alignment settings for Title and Label attribute. </summary>
+    /// <summary> Text alignment settings for Title, Text, and Label attribute. </summary>
     public enum Align
     {
         Left, Right, Center
