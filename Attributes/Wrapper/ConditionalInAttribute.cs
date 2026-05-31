@@ -390,4 +390,3 @@ namespace AstrotypeInspector.Editor
     }
 }
 #endif
-

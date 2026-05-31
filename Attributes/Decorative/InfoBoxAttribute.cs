@@ -20,6 +20,7 @@ namespace AstrotypeInspector
             ShowIf = showIf;
             Height = height;
         }
+        
     }
 }
 

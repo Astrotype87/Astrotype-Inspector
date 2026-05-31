@@ -298,6 +298,5 @@ namespace AstrotypeInspector.Editor
         }
         
     }
-    
 }
 #endif

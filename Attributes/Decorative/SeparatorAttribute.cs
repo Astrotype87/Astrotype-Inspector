@@ -18,8 +18,8 @@ namespace AstrotypeInspector
             MarginTop = marginTop < 0 ? 2f : marginTop;
             MarginBottom = marginBottom < 0 ? 2f : marginBottom;
         }
+        
     }
-    
 }
 
 #if UNITY_EDITOR
@@ -139,8 +139,6 @@ namespace AstrotypeInspector.Editor
             return toMin + (value - fromMin) * (toMax - toMin) / (fromMax - fromMin);
         }
         
-        
     }
-    
 }
 #endif

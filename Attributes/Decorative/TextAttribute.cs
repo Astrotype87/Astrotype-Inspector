@@ -34,9 +34,9 @@ namespace AstrotypeInspector
             Style = style;
             Align = align;
         }
+        
     }
 }
-
 
 #if UNITY_EDITOR
 namespace AstrotypeInspector.Editor
@@ -53,6 +53,7 @@ namespace AstrotypeInspector.Editor
     {
         private int DefaultFontSize => EditorStyles.label.fontSize;
         private float SingleLineHeight => EditorGUIUtility.singleLineHeight;
+        
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -78,8 +79,8 @@ namespace AstrotypeInspector.Editor
             
             // Create text style
             GUIStyle textStyle = new(EditorStyles.label);
-            textStyle.fontStyle = attribute.Style;
             textStyle.fontSize = textFontSize;
+            textStyle.fontStyle = attribute.Style;
             textStyle.alignment = GetMiddleAnchorByAlign(attribute.Align);
             
             // Draw text label
