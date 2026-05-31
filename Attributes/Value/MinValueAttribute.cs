@@ -30,44 +30,20 @@ namespace AstrotypeInspector.Editor
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            EditorGUI.BeginChangeCheck();
             EditorGUI.PropertyField(position, property, label, true);
-            
-            var attribute = this.attribute as MinValueAttribute;
-            
-            ApplyMinValue(property, attribute.Min);
-        }
-        
-        public override VisualElement CreatePropertyGUI(SerializedProperty property)
-        {
-            // Create property field
-            var propertyField = new PropertyField(property);
-            propertyField.schedule.Execute(() =>
+            if (EditorGUI.EndChangeCheck())
             {
-                // Unwrap property field wrapper
-                propertyField.UnwrapElement(out var parent);
+                var attribute = this.attribute as MinValueAttribute;
                 
-                // Get the original property field
-                var originalField = parent.Q<PropertyField>();
-                originalField.RegisterValueChangeCallback(evt =>
+                if (property.propertyType == SerializedPropertyType.Float)
                 {
-                    var attribute = this.attribute as MinValueAttribute;
-                    ApplyMinValue(property, attribute.Min);
-                });
-            });
-            
-            return propertyField;
-        }
-        
-        
-        private void ApplyMinValue(SerializedProperty property, float min)
-        {
-            if (property.propertyType == SerializedPropertyType.Integer)
-            {
-                property.intValue = Mathf.Max(property.intValue, (int)min);
-            }
-            if (property.propertyType == SerializedPropertyType.Float)
-            {
-                property.floatValue = Mathf.Max(property.floatValue, min);
+                    property.floatValue = Mathf.Max(property.floatValue, attribute.Min);
+                }
+                else if (property.propertyType == SerializedPropertyType.Integer)
+                {
+                    property.intValue = Mathf.Max(property.intValue, (int)attribute.Min);
+                }
             }
         }
     }
