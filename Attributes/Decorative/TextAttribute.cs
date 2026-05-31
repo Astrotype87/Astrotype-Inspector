@@ -51,6 +51,9 @@ namespace AstrotypeInspector.Editor
     [CustomPropertyDrawer(typeof(TextAttribute))]
     public class TextDrawer : PropertyDrawer
     {
+        private static float lastViewWidth;
+        private float cachedPositionWidth;
+        
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var attribute = this.attribute as TextAttribute;
@@ -77,6 +80,10 @@ namespace AstrotypeInspector.Editor
             GUIContent textContent = new(attribute.Text);
             GUIStyle textStyle = CreateTextStyle(attribute);
             float textHeight = CalculateTextHeight(textContent, textStyle, position.width);
+            
+            // Cache position.width in Repaint event, used in GetPropertyHeight() to calculate paragraph height
+            if (Event.current.type == EventType.Repaint)
+                cachedPositionWidth = position.width;
             
             // Draw text label
             Rect textRect = position;
@@ -130,6 +137,28 @@ namespace AstrotypeInspector.Editor
         }
         
         
+        private float PredictPositionWidth()
+        {
+            // Detect change in view width
+            float currentViewWidth = EditorGUIUtility.currentViewWidth;
+            bool hasCurrentViewWidthChanged = lastViewWidth != currentViewWidth;
+            lastViewWidth = EditorGUIUtility.currentViewWidth;
+            
+            // Use cached position width if view width doesn't update
+            if (!hasCurrentViewWidthChanged)
+                return cachedPositionWidth;
+            
+            // If current view width has changed, predict position.width
+            const float IndentWidth = 15f;
+            const float LeftPadding = 18f; // IMGUI inspector left padding
+            const float RightPadding = 4f; // IMGUI inspector right padding
+            
+            // NOTE: Can't detect if scroll bar is present in the inspector
+            float currentIndentWidth = EditorGUI.indentLevel * IndentWidth; // * InspectorState.IndentDecimalOffset
+            return currentViewWidth - currentIndentWidth - LeftPadding - RightPadding;
+        }
+        
+        
         private static GUIStyle CreateTextStyle(TextAttribute attribute)
         {
             return new GUIStyle(EditorStyles.label)
@@ -144,19 +173,6 @@ namespace AstrotypeInspector.Editor
         {
             const float ExtraLineHeight = 3f; // EditorGUIUtility.singleLineHeight - EditorStyles.label.lineHeight (18f - 15f)
             return Mathf.Round(style.CalcHeight(content, width)) + ExtraLineHeight;
-        }
-        
-        private static float PredictPositionWidth()
-        {
-            const float IndentWidth = 15f;
-            const float LeftPadding = 18f; // IMGUI inspector left padding
-            const float RightPadding = 4f; // IMGUI inspector right padding
-            
-            float currentIndentWidth = EditorGUI.indentLevel * IndentWidth; // * InspectorState.IndentDecimalOffset
-            float currentViewWidth = EditorGUIUtility.currentViewWidth;
-            float scrollBarWidth = 0;
-            
-            return currentViewWidth - currentIndentWidth - scrollBarWidth - LeftPadding - RightPadding;
         }
         
         private static TextAnchor GetMiddleAnchorByAlign(Align align)

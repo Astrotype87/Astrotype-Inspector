@@ -51,6 +51,7 @@ namespace AstrotypeInspector.Editor
     [CustomPropertyDrawer(typeof(ParagraphAttribute))]
     public class ParagraphDrawer : PropertyDrawer
     {
+        private static float lastViewWidth;
         private float cachedPositionWidth;
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -60,7 +61,7 @@ namespace AstrotypeInspector.Editor
             // Create paragraph content, style, and calculate height
             GUIContent paragraphContent = new(attribute.Paragraph);
             GUIStyle paragraphStyle = CreateParagraphStyle(attribute);
-            float paragraphHeight = CalculateParagraphHeight(paragraphContent, paragraphStyle, cachedPositionWidth);
+            float paragraphHeight = CalculateParagraphHeight(paragraphContent, paragraphStyle, PredictPositionWidth());
             
             float height = EditorGUI.GetPropertyHeight(property, label, true);
             height += paragraphHeight + EditorGUIUtility.standardVerticalSpacing;
@@ -136,6 +137,28 @@ namespace AstrotypeInspector.Editor
             });
             
             return propertyField;
+        }
+        
+        
+        private float PredictPositionWidth()
+        {
+            // Detect change in view width
+            float currentViewWidth = EditorGUIUtility.currentViewWidth;
+            bool hasCurrentViewWidthChanged = lastViewWidth != currentViewWidth;
+            lastViewWidth = EditorGUIUtility.currentViewWidth;
+            
+            // Use cached position width if view width doesn't update
+            if (!hasCurrentViewWidthChanged)
+                return cachedPositionWidth;
+            
+            // If current view width has changed, predict position.width
+            const float IndentWidth = 15f;
+            const float LeftPadding = 18f; // IMGUI inspector left padding
+            const float RightPadding = 4f; // IMGUI inspector right padding
+            
+            // NOTE: Can't detect if scroll bar is present in the inspector
+            float currentIndentWidth = EditorGUI.indentLevel * IndentWidth; // * InspectorState.IndentDecimalOffset
+            return currentViewWidth - currentIndentWidth - LeftPadding - RightPadding;
         }
         
         

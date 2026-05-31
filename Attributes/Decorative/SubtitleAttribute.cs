@@ -14,6 +14,7 @@ namespace AstrotypeInspector
         public readonly FontStyle Style = FontStyle.Normal;
         public readonly Align Align = Align.Left;
         
+        
         public SubtitleAttribute(string subtitle,
             FontStyle style = FontStyle.Normal, Align align = Align.Left) : base(true)
         {
