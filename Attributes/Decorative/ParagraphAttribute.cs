@@ -51,31 +51,14 @@ namespace AstrotypeInspector.Editor
     [CustomPropertyDrawer(typeof(ParagraphAttribute))]
     public class ParagraphDrawer : PropertyDrawer
     {
-        private const float IndentWidth = 15f;
-        private const float ContextWidthOffset = 18f + 4f; // IMGUI inspector left padding + right padding
-        
-        private int DefaultFontSize => EditorStyles.label.fontSize;
-        
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var attribute = this.attribute as ParagraphAttribute;
-            int paragraphFontSize = attribute.Size <= 0 ? DefaultFontSize : attribute.Size;
             
-            // Create paragraph style
-            GUIStyle paragraphStyle = new(EditorStyles.label);
-            paragraphStyle.fontSize = paragraphFontSize;
-            paragraphStyle.fontStyle = attribute.Style;
-            paragraphStyle.alignment = GetMiddleAnchorByAlign(attribute.Align);
-            paragraphStyle.wordWrap = true;
-            
-            // Calculate rect width
-            float indentWidth = EditorGUI.indentLevel * IndentWidth; // * InspectorState.IndentDecimalOffset
-            float contextWidth = EditorGUIUtility.currentViewWidth - indentWidth - ContextWidthOffset;
-            
-            // Get paragraph content and height
+            // Create paragraph content, style, and calculate height
             GUIContent paragraphContent = new(attribute.Paragraph);
-            float paragraphHeight = paragraphStyle.CalcHeight(paragraphContent, contextWidth);
-            Debug.Log($"indentWidth: {indentWidth}, paragraphHeight: {paragraphHeight}, contextWidth: {contextWidth}");
+            GUIStyle paragraphStyle = CreateParagraphStyle(attribute);
+            float paragraphHeight = CalculateParagraphHeight(paragraphContent, paragraphStyle, PredictPositionWidth());
             
             float height = EditorGUI.GetPropertyHeight(property, label, true);
             height += paragraphHeight + EditorGUIUtility.standardVerticalSpacing;
@@ -89,18 +72,11 @@ namespace AstrotypeInspector.Editor
             float offsetIfBottom = attribute.bottom
                 ? EditorGUI.GetPropertyHeight(property) + EditorGUIUtility.standardVerticalSpacing
                 : 0;
-            int paragraphFontSize = attribute.Size <= 0 ? DefaultFontSize : attribute.Size;
             
-            // Create paragraph style
-            GUIStyle paragraphStyle = new(EditorStyles.label);
-            paragraphStyle.fontSize = paragraphFontSize;
-            paragraphStyle.fontStyle = attribute.Style;
-            paragraphStyle.alignment = GetMiddleAnchorByAlign(attribute.Align);
-            paragraphStyle.wordWrap = true;
-            
-            // Get paragraph content and height
+            // Create paragraph content, style, and calculate height
             GUIContent paragraphContent = new(attribute.Paragraph);
-            float paragraphHeight = paragraphStyle.CalcHeight(paragraphContent, position.width);
+            GUIStyle paragraphStyle = CreateParagraphStyle(attribute);
+            float paragraphHeight = CalculateParagraphHeight(paragraphContent, paragraphStyle, position.width);
             
             // Draw paragraph label
             Rect paragraphRect = position;
@@ -156,6 +132,35 @@ namespace AstrotypeInspector.Editor
             return propertyField;
         }
         
+        
+        private static GUIStyle CreateParagraphStyle(ParagraphAttribute attribute)
+        {
+            return new GUIStyle(EditorStyles.label)
+            {
+                fontSize = attribute.Size <= 0 ? EditorStyles.label.fontSize : attribute.Size,
+                fontStyle = attribute.Style,
+                alignment = GetMiddleAnchorByAlign(attribute.Align),
+            };
+        }
+        
+        private static float CalculateParagraphHeight(GUIContent content, GUIStyle style, float width)
+        {
+            const float ExtraLineHeight = 3f; // EditorGUIUtility.singleLineHeight - EditorStyles.label.lineHeight (18f - 15f)
+            return Mathf.Round(style.CalcHeight(content, width)) + ExtraLineHeight;
+        }
+        
+        private static float PredictPositionWidth()
+        {
+            const float IndentWidth = 15f;
+            const float LeftPadding = 18f; // IMGUI inspector left padding
+            const float RightPadding = 4f; // IMGUI inspector right padding
+            
+            float currentIndentWidth = EditorGUI.indentLevel * IndentWidth; // * InspectorState.IndentDecimalOffset
+            float currentViewWidth = EditorGUIUtility.currentViewWidth;
+            float scrollBarWidth = 0;
+            
+            return currentViewWidth - currentIndentWidth - scrollBarWidth - LeftPadding - RightPadding;
+        }
         
         private static TextAnchor GetMiddleAnchorByAlign(Align align)
         {
