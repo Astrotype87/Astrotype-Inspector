@@ -51,15 +51,14 @@ namespace AstrotypeInspector.Editor
     [CustomPropertyDrawer(typeof(TextAttribute))]
     public class TextDrawer : PropertyDrawer
     {
-        private int DefaultFontSize => EditorStyles.label.fontSize;
-        private float SingleLineHeight => EditorGUIUtility.singleLineHeight;
-        
-        
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var attribute = this.attribute as TextAttribute;
-            int textFontSize = attribute.Size <= 0 ? DefaultFontSize : attribute.Size;
-            float textHeight = SingleLineHeight / DefaultFontSize * textFontSize;
+            
+            // Create text content, style, and calculate height
+            GUIContent textContent = new(attribute.Text);
+            GUIStyle textStyle = CreateTextStyle(attribute);
+            float textHeight = CalculateTextHeight(textContent, textStyle, PredictPositionWidth());
             
             float height = EditorGUI.GetPropertyHeight(property, label, true);
             height += textHeight + EditorGUIUtility.standardVerticalSpacing;
@@ -74,20 +73,16 @@ namespace AstrotypeInspector.Editor
                 ? EditorGUI.GetPropertyHeight(property) + EditorGUIUtility.standardVerticalSpacing
                 : 0;
             
-            int textFontSize = attribute.Size <= 0 ? DefaultFontSize : attribute.Size;
-            float textHeight = SingleLineHeight / DefaultFontSize * textFontSize;
-            
-            // Create text style
-            GUIStyle textStyle = new(EditorStyles.label);
-            textStyle.fontSize = textFontSize;
-            textStyle.fontStyle = attribute.Style;
-            textStyle.alignment = GetMiddleAnchorByAlign(attribute.Align);
+            // Create text content, style, and calculate height
+            GUIContent textContent = new(attribute.Text);
+            GUIStyle textStyle = CreateTextStyle(attribute);
+            float textHeight = CalculateTextHeight(textContent, textStyle, position.width);
             
             // Draw text label
             Rect textRect = position;
             textRect.y += offsetIfBottom;
             textRect.height = textHeight;
-            GUI.Label(textRect, attribute.Text, textStyle);
+            GUI.Label(textRect, textContent, textStyle);
             
             // Draw property field
             Rect propertyRect = position;
@@ -134,6 +129,35 @@ namespace AstrotypeInspector.Editor
             return propertyField;
         }
         
+        
+        private static GUIStyle CreateTextStyle(TextAttribute attribute)
+        {
+            return new GUIStyle(EditorStyles.label)
+            {
+                fontSize = attribute.Size <= 0 ? EditorStyles.label.fontSize : attribute.Size,
+                fontStyle = attribute.Style,
+                alignment = GetMiddleAnchorByAlign(attribute.Align),
+            };
+        }
+        
+        private static float CalculateTextHeight(GUIContent content, GUIStyle style, float width)
+        {
+            const float ExtraLineHeight = 3f; // EditorGUIUtility.singleLineHeight - EditorStyles.label.lineHeight (18f - 15f)
+            return Mathf.Round(style.CalcHeight(content, width)) + ExtraLineHeight;
+        }
+        
+        private static float PredictPositionWidth()
+        {
+            const float IndentWidth = 15f;
+            const float LeftPadding = 18f; // IMGUI inspector left padding
+            const float RightPadding = 4f; // IMGUI inspector right padding
+            
+            float currentIndentWidth = EditorGUI.indentLevel * IndentWidth; // * InspectorState.IndentDecimalOffset
+            float currentViewWidth = EditorGUIUtility.currentViewWidth;
+            float scrollBarWidth = 0;
+            
+            return currentViewWidth - currentIndentWidth - scrollBarWidth - LeftPadding - RightPadding;
+        }
         
         private static TextAnchor GetMiddleAnchorByAlign(Align align)
         {
