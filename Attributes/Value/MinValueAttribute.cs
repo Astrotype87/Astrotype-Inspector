@@ -29,6 +29,7 @@ namespace AstrotypeInspector.Editor
     public class MinValueDrawer : PropertyDrawer
     {
         private bool isFocused;
+        private bool isHold;
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -70,14 +71,16 @@ namespace AstrotypeInspector.Editor
                     {
                         var field = parent.Q<FloatField>();
                         RegisterFocusBinding(field, property);
+                        RegisterPointerCapture(field);
+                        
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (isFocused)
                             {
-                                Debug.Log($"InputEvent + isFocused");
                                 property.floatValue = Mathf.Max(attribute.Min, field.value);
                                 property.serializedObject.ApplyModifiedProperties();
                                 property.serializedObject.Update();
+                                if (isHold) field.value = property.floatValue;
                             }
                         });
                     }
@@ -92,16 +95,25 @@ namespace AstrotypeInspector.Editor
         {
             element.RegisterCallback<FocusInEvent>(_ =>
             {
-                Debug.Log($"FocusInEvent");
                 isFocused = true;
                 element.Unbind();
             });
             element.RegisterCallback<FocusOutEvent>(_ =>
             {
-                Debug.Log($"FocusOutEvent");
                 isFocused = false;
                 element.Bind(property.serializedObject);
             });
+        }
+        
+        private void RegisterPointerCapture(VisualElement element)
+        {
+            // Detect hold and drag label (for single field only, not yet for composite field like Vector3 and foldout fields)
+            var label = element.Q<Label>();
+            if (label != null)
+            {
+                label.RegisterCallback<PointerCaptureEvent>(_ => isHold = true);
+                label.RegisterCallback<PointerCaptureOutEvent>(_ => isHold = false);
+            }
         }
     }
 }
