@@ -148,7 +148,7 @@ namespace AstrotypeInspector.Editor
                     if (property.type == "float")
                     {
                         var field = parent.Q<FloatField>();
-                        HandleFocusAndLabelDragging(field, property);
+                        HandleFocusAndDragging(field, property.serializedObject);
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (isFocused)
@@ -163,7 +163,7 @@ namespace AstrotypeInspector.Editor
                     else if (property.type == "double")
                     {
                         var field = parent.Q<DoubleField>();
-                        HandleFocusAndLabelDragging(field, property);
+                        HandleFocusAndDragging(field, property.serializedObject);
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (isFocused)
@@ -181,7 +181,7 @@ namespace AstrotypeInspector.Editor
                     if (property.type == "int")
                     {
                         var field = parent.Q<IntegerField>();
-                        HandleFocusAndLabelDragging(field, property);
+                        HandleFocusAndDragging(field, property.serializedObject);
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (isFocused)
@@ -196,7 +196,7 @@ namespace AstrotypeInspector.Editor
                     else if (property.type == "long")
                     {
                         var field = parent.Q<LongField>();
-                        HandleFocusAndLabelDragging(field, property);
+                        HandleFocusAndDragging(field, property.serializedObject);
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (isFocused)
@@ -211,7 +211,7 @@ namespace AstrotypeInspector.Editor
                     else if (property.type == "uint")
                     {
                         var field = parent.Q<UnsignedIntegerField>();
-                        HandleFocusAndLabelDragging(field, property);
+                        HandleFocusAndDragging(field, property.serializedObject);
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (isFocused)
@@ -226,7 +226,7 @@ namespace AstrotypeInspector.Editor
                     else if (property.type == "ulong")
                     {
                         var field = parent.Q<UnsignedLongField>();
-                        HandleFocusAndLabelDragging(field, property);
+                        HandleFocusAndDragging(field, property.serializedObject);
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (isFocused)
@@ -242,7 +242,7 @@ namespace AstrotypeInspector.Editor
                 else if (property.propertyType == SerializedPropertyType.Vector2)
                 {
                     var field = parent.Q<Vector2Field>();
-                    HandleFocusAndLabelDragging(field, property);
+                    HandleFocusAndDragging(field, property.serializedObject);
                     field.RegisterCallback<InputEvent>(_ =>
                     {
                         if (isFocused)
@@ -261,7 +261,7 @@ namespace AstrotypeInspector.Editor
                 else if (property.propertyType == SerializedPropertyType.Vector2Int)
                 {
                     var field = parent.Q<Vector2IntField>();
-                    HandleFocusAndLabelDragging(field, property);
+                    HandleFocusAndDragging(field, property.serializedObject);
                     field.RegisterCallback<InputEvent>(_ =>
                     {
                         if (isFocused)
@@ -280,7 +280,7 @@ namespace AstrotypeInspector.Editor
                 else if (property.propertyType == SerializedPropertyType.Vector3)
                 {
                     var field = parent.Q<Vector3Field>();
-                    HandleFocusAndLabelDragging(field, property);
+                    HandleFocusAndDragging(field, property.serializedObject);
                     field.RegisterCallback<InputEvent>(_ =>
                     {
                         if (isFocused)
@@ -301,7 +301,7 @@ namespace AstrotypeInspector.Editor
                 {
                     Debug.Log($"property.propertyType == SerializedPropertyType.Vector3Int");
                     var field = parent.Q<Vector3IntField>();
-                    HandleFocusAndLabelDragging(field, property);
+                    HandleFocusAndDragging(field, property.serializedObject);
                     field.RegisterCallback<InputEvent>(_ =>
                     {
                         if (isFocused)
@@ -333,7 +333,7 @@ namespace AstrotypeInspector.Editor
                         }
                     }
                     
-                    HandleFocusAndLabelDragging(field, property);
+                    HandleFocusAndDragging(field, property.serializedObject);
                     field.RegisterCallback<InputEvent>(_ =>
                     {
                         if (isFocused)
@@ -371,7 +371,7 @@ namespace AstrotypeInspector.Editor
         }
         
         
-        private void HandleFocusAndLabelDragging(BindableElement element, SerializedProperty property)
+        private void HandleFocusAndDragging(BindableElement element, SerializedObject serializedObject)
         {
             // Detect property field focus
             element.RegisterCallback<FocusInEvent>(_ =>
@@ -384,7 +384,7 @@ namespace AstrotypeInspector.Editor
             {
                 Debug.Log($"{element.name} => FocusOutEvent");
                 isFocused = false;
-                element.Bind(property.serializedObject);
+                element.Bind(serializedObject);
             });
             
             // Detect numeric field label dragging
