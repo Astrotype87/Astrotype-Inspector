@@ -388,24 +388,19 @@ namespace AstrotypeInspector.Editor
             });
             
             // Detect numeric field label dragging
-            var textFields = element.Query<VisualElement>(className: "unity-base-text-field").ToList();
-            foreach (var textField in textFields)
+            var label = element.Q<Label>(className: "unity-base-text-field__label");
+            if (label != null)
             {
-                Debug.Log($"{element.name} > {textField.name}");
-                var label = textField.Q<Label>(className: "unity-base-text-field__label");
-                if (label != null)
+                label.RegisterCallback<PointerCaptureEvent>(_ =>
                 {
-                    label.RegisterCallback<PointerCaptureEvent>(_ =>
-                    {
-                        Debug.Log($"{element.name} {textField.name} => PointerCaptureEvent");
-                        isDragging = true;
-                    });
-                    label.RegisterCallback<PointerCaptureOutEvent>(_ =>
-                    {
-                        Debug.Log($"{element.name} {textField.name} => PointerCaptureOutEvent");
-                        isDragging = false;
-                    });
-                }
+                    Debug.Log($"{element.name} => PointerCaptureEvent");
+                    isDragging = true;
+                });
+                label.RegisterCallback<PointerCaptureOutEvent>(_ =>
+                {
+                    Debug.Log($"{element.name} => PointerCaptureOutEvent");
+                    isDragging = false;
+                });
             }
         }
         
