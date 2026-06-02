@@ -50,11 +50,13 @@ namespace AstrotypeInspector
 #if UNITY_EDITOR
 namespace AstrotypeInspector.Editor
 {
+    using System.Collections.Generic;
     using UnityEngine;
     using UnityEditor;
     using UnityEngine.UIElements;
     using UnityEditor.UIElements;
-    
+    using System.Linq;
+
     [CustomPropertyDrawer(typeof(MinValueAttribute))]
     public class MinValueDrawer : PropertyDrawer
     {
@@ -297,6 +299,7 @@ namespace AstrotypeInspector.Editor
                 }
                 else if (property.propertyType == SerializedPropertyType.Vector3Int)
                 {
+                    Debug.Log($"property.propertyType == SerializedPropertyType.Vector3Int");
                     var field = parent.Q<Vector3IntField>();
                     HandleFocusAndLabelDragging(field, property);
                     field.RegisterCallback<InputEvent>(_ =>
@@ -317,7 +320,19 @@ namespace AstrotypeInspector.Editor
                 }
                 else if (property.propertyType == SerializedPropertyType.Vector4)
                 {
-                    var field = parent.Q<Vector4Field>();
+                    BindableElement field = parent.Q<Vector4Field>();
+                    List<FloatField> floatFields = null;
+                    
+                    if (field == null)
+                    {
+                        field = parent.Q<Foldout>(className: "unity-foldout");
+                        if (field != null)
+                        {
+                            floatFields = field.Query<FloatField>().ToList();
+                            Debug.Log($"Vector4 float fields found: {string.Join(", ", floatFields.Select(f => f.name))}");
+                        }
+                    }
+                    
                     HandleFocusAndLabelDragging(field, property);
                     field.RegisterCallback<InputEvent>(_ =>
                     {
@@ -332,12 +347,24 @@ namespace AstrotypeInspector.Editor
                             
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
-                            if (isDragging) field.value = property.vector4Value;
+                            
+                            if (isDragging)
+                            {
+                                if (floatFields == null)
+                                {
+                                    // Set Vector4Field value
+                                    ((Vector4Field)field).value = property.vector4Value;
+                                }
+                                else
+                                {
+                                    // Set value of x, y, z, and w
+                                    for (int i = 0; i < 4; i++)
+                                        floatFields[i].value = value[i];
+                                }
+                            }
                         }
                     });
                 }
-                
-                
             });
             
             return propertyField;
@@ -349,11 +376,13 @@ namespace AstrotypeInspector.Editor
             // Detect property field focus
             element.RegisterCallback<FocusInEvent>(_ =>
             {
+                Debug.Log($"{element.name} => FocusInEvent");
                 isFocused = true;
                 element.Unbind();
             });
             element.RegisterCallback<FocusOutEvent>(_ =>
             {
+                Debug.Log($"{element.name} => FocusOutEvent");
                 isFocused = false;
                 element.Bind(property.serializedObject);
             });
@@ -366,8 +395,16 @@ namespace AstrotypeInspector.Editor
                 var label = textField.Q<Label>(className: "unity-base-text-field__label");
                 if (label != null)
                 {
-                    label.RegisterCallback<PointerCaptureEvent>(_ => isDragging = true);
-                    label.RegisterCallback<PointerCaptureOutEvent>(_ => isDragging = false);
+                    label.RegisterCallback<PointerCaptureEvent>(_ =>
+                    {
+                        Debug.Log($"{element.name} {textField.name} => PointerCaptureEvent");
+                        isDragging = true;
+                    });
+                    label.RegisterCallback<PointerCaptureOutEvent>(_ =>
+                    {
+                        Debug.Log($"{element.name} {textField.name} => PointerCaptureOutEvent");
+                        isDragging = false;
+                    });
                 }
             }
         }
