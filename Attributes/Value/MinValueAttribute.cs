@@ -151,12 +151,17 @@ namespace AstrotypeInspector.Editor
                         HandleFocusAndDragging(field, property.serializedObject);
                         field.RegisterCallback<InputEvent>(_ =>
                         {
+                            Debug.Log($"[{property.name}] InputEvent");
                             if (isFocused)
                             {
                                 property.floatValue = Mathf.Max(attribute.MinX, field.value);
                                 property.serializedObject.ApplyModifiedProperties();
                                 property.serializedObject.Update();
-                                if (isDragging) field.value = property.floatValue;
+                                if (isDragging)
+                                {
+                                    Debug.Log($"UI field updated");
+                                    field.value = property.floatValue;
+                                }
                             }
                         });
                     }
@@ -243,20 +248,30 @@ namespace AstrotypeInspector.Editor
                 {
                     var field = parent.Q<Vector3Field>();
                     HandleFocusAndDragging(field, property.serializedObject);
-                    field.RegisterCallback<InputEvent>(_ =>
+                    
+                    var floatFields = parent.Query<FloatField>().ToList();
+                    foreach (var floatField in floatFields)
                     {
-                        if (isFocused)
+                        floatField.RegisterCallback<ChangeEvent<float>>(_ =>
                         {
-                            property.vector3Value = new(
-                                Mathf.Max(attribute.MinX, field.value.x),
-                                Mathf.Max(attribute.MinY, field.value.y),
-                                Mathf.Max(attribute.MinZ, field.value.z));
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            
-                            if (isDragging) field.value = property.vector3Value;
-                        }
-                    });
+                            Debug.Log($"[{field.name}] InputEvent");
+                            if (isFocused)
+                            {
+                                property.vector3Value = new(
+                                    Mathf.Max(attribute.MinX, field.value.x),
+                                    Mathf.Max(attribute.MinY, field.value.y),
+                                    Mathf.Max(attribute.MinZ, field.value.z));
+                                property.serializedObject.ApplyModifiedProperties();
+                                property.serializedObject.Update();
+                                
+                                if (isDragging)
+                                {
+                                    Debug.Log($"UI field updated");
+                                    field.value = property.vector3Value;
+                                }
+                            }
+                        });
+                    }
                 }
             });
             
