@@ -107,14 +107,19 @@ namespace AstrotypeInspector.Editor
         
         private void RegisterPointerCapture(VisualElement element)
         {
-            // Detect hold and drag label (for single field only, not yet for composite field like Vector3 and foldout fields)
-            var label = element.Q<Label>();
-            if (label != null)
+            var textFields = element.Query<VisualElement>(className: "unity-base-text-field").ToList();
+            foreach (var textField in textFields)
             {
-                label.RegisterCallback<PointerCaptureEvent>(_ => isHold = true);
-                label.RegisterCallback<PointerCaptureOutEvent>(_ => isHold = false);
+                Debug.Log($"{element.name} > {textField.name}");
+                var label = textField.Q<Label>(className: "unity-base-text-field__label");
+                if (label != null)
+                {
+                    label.RegisterCallback<PointerCaptureEvent>(_ => isHold = true);
+                    label.RegisterCallback<PointerCaptureOutEvent>(_ => isHold = false);
+                }
             }
         }
+        
     }
 }
 #endif
