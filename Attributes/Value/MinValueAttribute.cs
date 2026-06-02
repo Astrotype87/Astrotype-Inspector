@@ -61,7 +61,7 @@ namespace AstrotypeInspector.Editor
         private const string InvalidTypeMessage = "Use MinValue with float, int or Vector.";
         
         private bool isFocused;
-        private bool isHold;
+        private bool isDragging;
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -146,9 +146,7 @@ namespace AstrotypeInspector.Editor
                     if (property.type == "float")
                     {
                         var field = parent.Q<FloatField>();
-                        RegisterFocusBinding(field, property);
-                        RegisterPointerCapture(field);
-                        
+                        HandleFocusAndLabelDragging(field, property);
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (isFocused)
@@ -156,7 +154,7 @@ namespace AstrotypeInspector.Editor
                                 property.floatValue = Mathf.Max(attribute.MinX, field.value);
                                 property.serializedObject.ApplyModifiedProperties();
                                 property.serializedObject.Update();
-                                if (isHold) field.value = property.floatValue;
+                                if (isDragging) field.value = property.floatValue;
                             }
                         });
                     }
@@ -167,8 +165,9 @@ namespace AstrotypeInspector.Editor
         }
         
         
-        private void RegisterFocusBinding(BindableElement element, SerializedProperty property)
+        private void HandleFocusAndLabelDragging(BindableElement element, SerializedProperty property)
         {
+            // Detect property field focus
             element.RegisterCallback<FocusInEvent>(_ =>
             {
                 isFocused = true;
@@ -179,10 +178,8 @@ namespace AstrotypeInspector.Editor
                 isFocused = false;
                 element.Bind(property.serializedObject);
             });
-        }
-        
-        private void RegisterPointerCapture(VisualElement element)
-        {
+            
+            // Detect numeric field label dragging
             var textFields = element.Query<VisualElement>(className: "unity-base-text-field").ToList();
             foreach (var textField in textFields)
             {
@@ -190,8 +187,8 @@ namespace AstrotypeInspector.Editor
                 var label = textField.Q<Label>(className: "unity-base-text-field__label");
                 if (label != null)
                 {
-                    label.RegisterCallback<PointerCaptureEvent>(_ => isHold = true);
-                    label.RegisterCallback<PointerCaptureOutEvent>(_ => isHold = false);
+                    label.RegisterCallback<PointerCaptureEvent>(_ => isDragging = true);
+                    label.RegisterCallback<PointerCaptureOutEvent>(_ => isDragging = false);
                 }
             }
         }
