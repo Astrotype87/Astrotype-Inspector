@@ -8,11 +8,41 @@ namespace AstrotypeInspector
     [AttributeUsage(AttributeTargets.Field)]
     public class MinValueAttribute : PropertyAttribute
     {
-        public readonly float Min;
+        public readonly float MinX;
+        public readonly float MinY;
+        public readonly float MinZ;
+        public readonly float MinW;
         
         public MinValueAttribute(float min)
         {
-            Min = min;
+            MinX = min;
+            MinY = min;
+            MinZ = min;
+            MinW = min;
+        }
+        
+        public MinValueAttribute(float minX, float minY)
+        {
+            MinX = minX;
+            MinY = minY;
+            MinZ = 0;
+            MinW = 0;
+        }
+        
+        public MinValueAttribute(float minX, float minY, float minZ)
+        {
+            MinX = minX;
+            MinY = minY;
+            MinZ = minZ;
+            MinW = 0;
+        }
+        
+        public MinValueAttribute(float minX, float minY, float minZ, float minW)
+        {
+            MinX = minX;
+            MinY = minY;
+            MinZ = minZ;
+            MinW = minW;
         }
     }
 }
@@ -28,6 +58,8 @@ namespace AstrotypeInspector.Editor
     [CustomPropertyDrawer(typeof(MinValueAttribute))]
     public class MinValueDrawer : PropertyDrawer
     {
+        private const string InvalidTypeMessage = "Use MinValue with float, int or Vector.";
+        
         private bool isFocused;
         private bool isHold;
         
@@ -41,15 +73,54 @@ namespace AstrotypeInspector.Editor
                 
                 if (property.propertyType == SerializedPropertyType.Float)
                 {
-                    property.floatValue = Mathf.Max(attribute.Min, property.floatValue);
+                    property.floatValue = Mathf.Max(attribute.MinX, property.floatValue);
                 }
                 else if (property.propertyType == SerializedPropertyType.Integer)
                 {
-                    property.intValue = Mathf.Max((int)attribute.Min, property.intValue);
+                    property.intValue = Mathf.Max((int)attribute.MinX, property.intValue);
+                }
+                else if (property.propertyType == SerializedPropertyType.Vector2)
+                {
+                    Vector2 value = property.vector2Value;
+                    property.vector2Value = new(
+                        Mathf.Max(attribute.MinX, value.x),
+                        Mathf.Max(attribute.MinY, value.y));
+                }
+                else if (property.propertyType == SerializedPropertyType.Vector2Int)
+                {
+                    Vector2Int value = property.vector2IntValue;
+                    property.vector2IntValue = new(
+                        Mathf.Max((int)attribute.MinX, value.x),
+                        Mathf.Max((int)attribute.MinY, value.y));
+                }
+                else if (property.propertyType == SerializedPropertyType.Vector3)
+                {
+                    Vector3 value = property.vector3Value;
+                    property.vector3Value = new(
+                        Mathf.Max(attribute.MinX, value.x),
+                        Mathf.Max(attribute.MinY, value.y),
+                        Mathf.Max(attribute.MinZ, value.z));
+                }
+                else if (property.propertyType == SerializedPropertyType.Vector3Int)
+                {
+                    Vector3Int value = property.vector3IntValue;
+                    property.vector3IntValue = new(
+                        Mathf.Max((int)attribute.MinX, value.x),
+                        Mathf.Max((int)attribute.MinY, value.y),
+                        Mathf.Max((int)attribute.MinZ, value.z));
+                }
+                else if (property.propertyType == SerializedPropertyType.Vector4)
+                {
+                    Vector4 value = property.vector4Value;
+                    property.vector4Value = new(
+                        Mathf.Max(attribute.MinX, value.x),
+                        Mathf.Max(attribute.MinY, value.y),
+                        Mathf.Max(attribute.MinZ, value.z),
+                        Mathf.Max(attribute.MinW, value.w));
                 }
                 else
                 {
-                    EditorGUI.LabelField(position, label.text, "Other types not implemented.");
+                    EditorGUI.LabelField(position, label.text, InvalidTypeMessage);
                 }
             }
         }
@@ -77,7 +148,7 @@ namespace AstrotypeInspector.Editor
                         {
                             if (isFocused)
                             {
-                                property.floatValue = Mathf.Max(attribute.Min, field.value);
+                                property.floatValue = Mathf.Max(attribute.MinX, field.value);
                                 property.serializedObject.ApplyModifiedProperties();
                                 property.serializedObject.Update();
                                 if (isHold) field.value = property.floatValue;
