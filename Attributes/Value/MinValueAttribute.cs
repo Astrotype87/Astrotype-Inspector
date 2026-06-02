@@ -239,44 +239,6 @@ namespace AstrotypeInspector.Editor
                         });
                     }
                 }
-                else if (property.propertyType == SerializedPropertyType.Vector2)
-                {
-                    var field = parent.Q<Vector2Field>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    field.RegisterCallback<InputEvent>(_ =>
-                    {
-                        if (isFocused)
-                        {
-                            Vector2 value = property.vector2Value;
-                            property.vector2Value = new(
-                                Mathf.Max(attribute.MinX, value.x),
-                                Mathf.Max(attribute.MinY, value.y));
-                            
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            if (isDragging) field.value = property.vector2Value;
-                        }
-                    });
-                }
-                else if (property.propertyType == SerializedPropertyType.Vector2Int)
-                {
-                    var field = parent.Q<Vector2IntField>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    field.RegisterCallback<InputEvent>(_ =>
-                    {
-                        if (isFocused)
-                        {
-                            Vector2Int value = property.vector2IntValue;
-                            property.vector2IntValue = new(
-                                Mathf.Max((int)attribute.MinX, value.x),
-                                Mathf.Max((int)attribute.MinY, value.y));
-                            
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            if (isDragging) field.value = property.vector2IntValue;
-                        }
-                    });
-                }
                 else if (property.propertyType == SerializedPropertyType.Vector3)
                 {
                     var field = parent.Q<Vector3Field>();
@@ -285,83 +247,14 @@ namespace AstrotypeInspector.Editor
                     {
                         if (isFocused)
                         {
-                            Vector3 value = property.vector3Value;
                             property.vector3Value = new(
-                                Mathf.Max(attribute.MinX, value.x),
-                                Mathf.Max(attribute.MinY, value.y),
-                                Mathf.Max(attribute.MinZ, value.z));
-                            
+                                Mathf.Max(attribute.MinX, field.value.x),
+                                Mathf.Max(attribute.MinY, field.value.y),
+                                Mathf.Max(attribute.MinZ, field.value.z));
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
+                            
                             if (isDragging) field.value = property.vector3Value;
-                        }
-                    });
-                }
-                else if (property.propertyType == SerializedPropertyType.Vector3Int)
-                {
-                    Debug.Log($"property.propertyType == SerializedPropertyType.Vector3Int");
-                    var field = parent.Q<Vector3IntField>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    field.RegisterCallback<InputEvent>(_ =>
-                    {
-                        if (isFocused)
-                        {
-                            Vector3Int value = property.vector3IntValue;
-                            property.vector3IntValue = new(
-                                Mathf.Max((int)attribute.MinX, value.x),
-                                Mathf.Max((int)attribute.MinY, value.y),
-                                Mathf.Max((int)attribute.MinZ, value.z));
-                            
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            if (isDragging) field.value = property.vector3IntValue;
-                        }
-                    });
-                }
-                else if (property.propertyType == SerializedPropertyType.Vector4)
-                {
-                    BindableElement field = parent.Q<Vector4Field>();
-                    List<FloatField> floatFields = null;
-                    
-                    if (field == null)
-                    {
-                        field = parent.Q<Foldout>(className: "unity-foldout");
-                        if (field != null)
-                        {
-                            floatFields = field.Query<FloatField>().ToList();
-                            Debug.Log($"Vector4 float fields found: {string.Join(", ", floatFields.Select(f => f.name))}");
-                        }
-                    }
-                    
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    field.RegisterCallback<InputEvent>(_ =>
-                    {
-                        if (isFocused)
-                        {
-                            Vector4 value = property.vector4Value;
-                            property.vector4Value = new(
-                                Mathf.Max(attribute.MinX, value.x),
-                                Mathf.Max(attribute.MinY, value.y),
-                                Mathf.Max(attribute.MinZ, value.z),
-                                Mathf.Max(attribute.MinW, value.w));
-                            
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            
-                            if (isDragging)
-                            {
-                                if (floatFields == null)
-                                {
-                                    // Set Vector4Field value
-                                    ((Vector4Field)field).value = property.vector4Value;
-                                }
-                                else
-                                {
-                                    // Set value of x, y, z, and w
-                                    for (int i = 0; i < 4; i++)
-                                        floatFields[i].value = value[i];
-                                }
-                            }
                         }
                     });
                 }
@@ -376,29 +269,29 @@ namespace AstrotypeInspector.Editor
             // Detect property field focus
             element.RegisterCallback<FocusInEvent>(_ =>
             {
-                Debug.Log($"{element.name} => FocusInEvent");
+                Debug.Log($"{element.name} => FocusInEvent --- isFocused = true, Unbind()");
                 isFocused = true;
                 element.Unbind();
             });
             element.RegisterCallback<FocusOutEvent>(_ =>
             {
-                Debug.Log($"{element.name} => FocusOutEvent");
+                Debug.Log($"{element.name} => FocusOutEvent --- isFocused = false, Bind()");
                 isFocused = false;
                 element.Bind(serializedObject);
             });
             
             // Detect numeric field label dragging
-            var label = element.Q<Label>(className: "unity-base-text-field__label");
-            if (label != null)
+            var labels = element.Query<Label>(className: "unity-base-text-field__label").ToList();
+            foreach (var label in labels)
             {
                 label.RegisterCallback<PointerCaptureEvent>(_ =>
                 {
-                    Debug.Log($"{element.name} => PointerCaptureEvent");
+                    Debug.Log($"{element.name} => PointerCaptureEvent --- isDragging = true");
                     isDragging = true;
                 });
                 label.RegisterCallback<PointerCaptureOutEvent>(_ =>
                 {
-                    Debug.Log($"{element.name} => PointerCaptureOutEvent");
+                    Debug.Log($"{element.name} => PointerCaptureOutEvent --- isDragging = false");
                     isDragging = false;
                 });
             }
