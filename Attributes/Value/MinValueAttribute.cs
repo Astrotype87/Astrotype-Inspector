@@ -303,22 +303,51 @@ namespace AstrotypeInspector.Editor
                 }
                 else if (property.propertyType == SerializedPropertyType.Vector4)
                 {
-                    var field = parent.Q<Vector4Field>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    foreach (var floatField in parent.Query<FloatField>().ToList())
+                    // Vector4 is usually displayed as foldout, but check for Vector4Field as well
+                    BindableElement field = parent.Q<Foldout>();
+                    field ??= parent.Q<Vector4Field>();
+                    
+                    var floatFields = parent.Query<FloatField>().ToList();
+                    foreach (var floatField in floatFields)
                     {
-                        floatField.RegisterCallback<ChangeEvent<float>>(_ =>
+                        HandleFocusAndDragging(floatField, property.serializedObject);
+                        if (field is Foldout)
                         {
-                            if (!isFocused) return;
-                            property.vector4Value = new(
-                                Mathf.Max(attribute.MinX, field.value.x),
-                                Mathf.Max(attribute.MinY, field.value.y),
-                                Mathf.Max(attribute.MinZ, field.value.z),
-                                Mathf.Max(attribute.MinW, field.value.w));
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            if (isDragging) field.value = property.vector4Value;
-                        });
+                            floatField.RegisterCallback<ChangeEvent<float>>(_ =>
+                            {
+                                if (!isFocused) return;
+                                property.vector4Value = new(
+                                    Mathf.Max(attribute.MinX, floatFields[0].value),
+                                    Mathf.Max(attribute.MinY, floatFields[1].value),
+                                    Mathf.Max(attribute.MinZ, floatFields[2].value),
+                                    Mathf.Max(attribute.MinW, floatFields[3].value));
+                                property.serializedObject.ApplyModifiedProperties();
+                                property.serializedObject.Update();
+                                if (isDragging)
+                                {
+                                    floatFields[0].value = property.vector4Value.x;
+                                    floatFields[1].value = property.vector4Value.y;
+                                    floatFields[2].value = property.vector4Value.z;
+                                    floatFields[3].value = property.vector4Value.w;
+                                }
+                            });
+                        }
+                        else if (field is Vector4Field vector4Field)
+                        {
+                            floatField.RegisterCallback<ChangeEvent<float>>(_ =>
+                            {
+                                if (!isFocused) return;
+                                property.vector4Value = new(
+                                    Mathf.Max(attribute.MinX, vector4Field.value.x),
+                                    Mathf.Max(attribute.MinY, vector4Field.value.y),
+                                    Mathf.Max(attribute.MinZ, vector4Field.value.z),
+                                    Mathf.Max(attribute.MinW, vector4Field.value.w));
+                                property.serializedObject.ApplyModifiedProperties();
+                                property.serializedObject.Update();
+                                if (isDragging) vector4Field.value = property.vector4Value;
+                            });
+                            
+                        }
                     }
                 }
             });
