@@ -230,18 +230,22 @@ namespace AstrotypeInspector.Editor
                 else if (property.propertyType == SerializedPropertyType.Vector2)
                 {
                     var field = parent.Q<Vector2Field>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    foreach (var floatField in parent.Query<FloatField>().ToList())
+                    var floatFields = parent.Query<FloatField>().ToList();
+                    foreach (var floatField in floatFields)
                     {
+                        HandleFocusAndDragging(field, property.serializedObject);
                         floatField.RegisterCallback<ChangeEvent<float>>(_ =>
                         {
                             if (!isFocused) return;
                             property.vector2Value = new(
-                                Mathf.Max(attribute.MinX, field.value.x),
-                                Mathf.Max(attribute.MinY, field.value.y));
+                                Mathf.Max(attribute.MinX, floatFields[0].value),
+                                Mathf.Max(attribute.MinY, floatFields[1].value));
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
-                            if (isDragging) field.value = property.vector2Value;
+                            
+                            for (int i = 0; i < floatFields.Count; i++)
+                                if (floatField != floatFields[i] || isDragging)
+                                    floatFields[i].SetValueWithoutNotify(property.vector2Value[i]);
                         });
                     }
                 }
