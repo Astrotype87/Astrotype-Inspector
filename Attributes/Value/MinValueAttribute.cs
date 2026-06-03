@@ -230,10 +230,11 @@ namespace AstrotypeInspector.Editor
                 else if (property.propertyType == SerializedPropertyType.Vector2)
                 {
                     var field = parent.Q<Vector2Field>();
+                    HandleFocusAndDragging(field, property.serializedObject);
+                    
                     var floatFields = parent.Query<FloatField>().ToList();
                     foreach (var floatField in floatFields)
                     {
-                        HandleFocusAndDragging(field, property.serializedObject);
                         floatField.RegisterCallback<ChangeEvent<float>>(_ =>
                         {
                             if (!isFocused) return;
@@ -252,10 +253,11 @@ namespace AstrotypeInspector.Editor
                 else if (property.propertyType == SerializedPropertyType.Vector2Int)
                 {
                     var field = parent.Q<Vector2IntField>();
+                    HandleFocusAndDragging(field, property.serializedObject);
+                    
                     var intFields = parent.Query<IntegerField>().ToList();
                     foreach (var intField in intFields)
                     {
-                        HandleFocusAndDragging(field, property.serializedObject);
                         intField.RegisterCallback<ChangeEvent<int>>(_ =>
                         {
                             if (!isFocused) return;
@@ -274,10 +276,11 @@ namespace AstrotypeInspector.Editor
                 else if (property.propertyType == SerializedPropertyType.Vector3)
                 {
                     var field = parent.Q<Vector3Field>();
+                    HandleFocusAndDragging(field, property.serializedObject);
+                    
                     var floatFields = parent.Query<FloatField>().ToList();
                     foreach (var floatField in floatFields)
                     {
-                        HandleFocusAndDragging(field, property.serializedObject);
                         floatField.RegisterCallback<ChangeEvent<float>>(_ =>
                         {
                             if (!isFocused) return;
@@ -297,10 +300,11 @@ namespace AstrotypeInspector.Editor
                 else if (property.propertyType == SerializedPropertyType.Vector3Int)
                 {
                     var field = parent.Q<Vector3IntField>();
+                    HandleFocusAndDragging(field, property.serializedObject);
+                    
                     var intFields = parent.Query<IntegerField>().ToList();
                     foreach (var intField in intFields)
                     {
-                        HandleFocusAndDragging(field, property.serializedObject);
                         intField.RegisterCallback<ChangeEvent<int>>(_ =>
                         {
                             if (!isFocused) return;
