@@ -50,12 +50,10 @@ namespace AstrotypeInspector
 #if UNITY_EDITOR
 namespace AstrotypeInspector.Editor
 {
-    using System.Collections.Generic;
     using UnityEngine;
     using UnityEditor;
     using UnityEngine.UIElements;
     using UnityEditor.UIElements;
-    using System.Linq;
 
     [CustomPropertyDrawer(typeof(MinValueAttribute))]
     public class MinValueDrawer : PropertyDrawer
@@ -124,7 +122,7 @@ namespace AstrotypeInspector.Editor
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (!isFocused) return;
-                            property.floatValue = Mathf.Max(attribute.MinX, field.value);
+                            property.floatValue = ValidateMin(attribute, field.value);
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
                             if (isDragging) field.value = property.floatValue;
@@ -137,7 +135,7 @@ namespace AstrotypeInspector.Editor
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (!isFocused) return;
-                            property.doubleValue = Math.Max(attribute.MinX, field.value);
+                            property.doubleValue = ValidateMin(attribute, field.value);
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
                             if (isDragging) field.value = property.doubleValue;
@@ -153,7 +151,7 @@ namespace AstrotypeInspector.Editor
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (!isFocused) return;
-                            property.intValue = Mathf.Max((int)attribute.MinX, field.value);
+                            property.intValue = ValidateMin(attribute, field.value);
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
                             if (isDragging) field.value = property.intValue;
@@ -166,7 +164,7 @@ namespace AstrotypeInspector.Editor
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (!isFocused) return;
-                            property.longValue = Math.Max((long)attribute.MinX, field.value);
+                            property.longValue = ValidateMin(attribute, field.value);
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
                             if (isDragging) field.value = property.longValue;
@@ -179,7 +177,7 @@ namespace AstrotypeInspector.Editor
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (!isFocused) return;
-                            property.uintValue = Math.Max((uint)attribute.MinX, field.value);
+                            property.uintValue = ValidateMin(attribute, field.value);
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
                             if (isDragging) field.value = property.uintValue;
@@ -192,7 +190,7 @@ namespace AstrotypeInspector.Editor
                         field.RegisterCallback<InputEvent>(_ =>
                         {
                             if (!isFocused) return;
-                            property.ulongValue = Math.Max((ulong)attribute.MinX, field.value);
+                            property.ulongValue = ValidateMin(attribute, field.value);
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
                             if (isDragging) field.value = property.ulongValue;
@@ -210,9 +208,8 @@ namespace AstrotypeInspector.Editor
                         floatField.RegisterCallback<ChangeEvent<float>>(_ =>
                         {
                             if (!isFocused) return;
-                            property.vector2Value = new(
-                                Mathf.Max(attribute.MinX, floatFields[0].value),
-                                Mathf.Max(attribute.MinY, floatFields[1].value));
+                            property.vector2Value = ValidateMin(attribute, new Vector2(
+                                floatFields[0].value, floatFields[1].value));
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
                             
@@ -233,9 +230,8 @@ namespace AstrotypeInspector.Editor
                         intField.RegisterCallback<ChangeEvent<int>>(_ =>
                         {
                             if (!isFocused) return;
-                            property.vector2IntValue = new(
-                                Mathf.Max((int)attribute.MinX, intFields[0].value),
-                                Mathf.Max((int)attribute.MinY, intFields[1].value));
+                            property.vector2IntValue = ValidateMin(attribute, new Vector2Int(
+                                intFields[0].value, intFields[1].value));
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
                             
@@ -256,10 +252,8 @@ namespace AstrotypeInspector.Editor
                         floatField.RegisterCallback<ChangeEvent<float>>(_ =>
                         {
                             if (!isFocused) return;
-                            property.vector3Value = new(
-                                Mathf.Max(attribute.MinX, floatFields[0].value),
-                                Mathf.Max(attribute.MinY, floatFields[1].value),
-                                Mathf.Max(attribute.MinZ, floatFields[2].value));
+                            property.vector3Value = ValidateMin(attribute, new Vector3(
+                                floatFields[0].value, floatFields[1].value, floatFields[2].value));
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
                             
@@ -280,10 +274,8 @@ namespace AstrotypeInspector.Editor
                         intField.RegisterCallback<ChangeEvent<int>>(_ =>
                         {
                             if (!isFocused) return;
-                            property.vector3IntValue = new(
-                                Mathf.Max((int)attribute.MinX, intFields[0].value),
-                                Mathf.Max((int)attribute.MinY, intFields[1].value),
-                                Mathf.Max((int)attribute.MinZ, intFields[2].value));
+                            property.vector3IntValue = ValidateMin(attribute, new Vector3Int(
+                                intFields[0].value, intFields[1].value, intFields[2].value));
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
                             
@@ -308,11 +300,8 @@ namespace AstrotypeInspector.Editor
                             floatField.RegisterCallback<ChangeEvent<float>>(_ =>
                             {
                                 if (!isFocused) return;
-                                property.vector4Value = new(
-                                    Mathf.Max(attribute.MinX, floatFields[0].value),
-                                    Mathf.Max(attribute.MinY, floatFields[1].value),
-                                    Mathf.Max(attribute.MinZ, floatFields[2].value),
-                                    Mathf.Max(attribute.MinW, floatFields[3].value));
+                                property.vector4Value = ValidateMin(attribute, new Vector4(
+                                    floatFields[0].value, floatFields[1].value, floatFields[2].value, floatFields[3].value));
                                 property.serializedObject.ApplyModifiedProperties();
                                 property.serializedObject.Update();
                                 if (isDragging)
@@ -329,11 +318,7 @@ namespace AstrotypeInspector.Editor
                             floatField.RegisterCallback<ChangeEvent<float>>(_ =>
                             {
                                 if (!isFocused) return;
-                                property.vector4Value = new(
-                                    Mathf.Max(attribute.MinX, vector4Field.value.x),
-                                    Mathf.Max(attribute.MinY, vector4Field.value.y),
-                                    Mathf.Max(attribute.MinZ, vector4Field.value.z),
-                                    Mathf.Max(attribute.MinW, vector4Field.value.w));
+                                property.vector4Value = ValidateMin(attribute, vector4Field.value);
                                 property.serializedObject.ApplyModifiedProperties();
                                 property.serializedObject.Update();
                                 if (isDragging) vector4Field.value = property.vector4Value;
@@ -408,6 +393,7 @@ namespace AstrotypeInspector.Editor
                 Math.Max(attribute.MinY, value.y),
                 Math.Max(attribute.MinZ, value.z),
                 Math.Max(attribute.MinW, value.w));
+        
     }
 }
 #endif
