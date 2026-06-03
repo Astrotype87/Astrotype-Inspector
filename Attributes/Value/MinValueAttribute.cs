@@ -252,56 +252,68 @@ namespace AstrotypeInspector.Editor
                 else if (property.propertyType == SerializedPropertyType.Vector2Int)
                 {
                     var field = parent.Q<Vector2IntField>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    foreach (var integerField in parent.Query<IntegerField>().ToList())
+                    var intFields = parent.Query<IntegerField>().ToList();
+                    foreach (var intField in intFields)
                     {
-                        integerField.RegisterCallback<ChangeEvent<int>>(_ =>
+                        HandleFocusAndDragging(field, property.serializedObject);
+                        intField.RegisterCallback<ChangeEvent<int>>(_ =>
                         {
                             if (!isFocused) return;
                             property.vector2IntValue = new(
-                                Mathf.Max((int)attribute.MinX, field.value.x),
-                                Mathf.Max((int)attribute.MinY, field.value.y));
+                                Mathf.Max((int)attribute.MinX, intFields[0].value),
+                                Mathf.Max((int)attribute.MinY, intFields[1].value));
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
-                            if (isDragging) field.value = property.vector2IntValue;
+                            
+                            for (int i = 0; i < intFields.Count; i++)
+                                if (intField != intFields[i] || isDragging)
+                                    intFields[i].SetValueWithoutNotify(property.vector2IntValue[i]);
                         });
                     }
                 }
                 else if (property.propertyType == SerializedPropertyType.Vector3)
                 {
                     var field = parent.Q<Vector3Field>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    foreach (var floatField in parent.Query<FloatField>().ToList())
+                    var floatFields = parent.Query<FloatField>().ToList();
+                    foreach (var floatField in floatFields)
                     {
+                        HandleFocusAndDragging(field, property.serializedObject);
                         floatField.RegisterCallback<ChangeEvent<float>>(_ =>
                         {
                             if (!isFocused) return;
                             property.vector3Value = new(
-                                Mathf.Max(attribute.MinX, field.value.x),
-                                Mathf.Max(attribute.MinY, field.value.y),
-                                Mathf.Max(attribute.MinZ, field.value.z));
+                                Mathf.Max(attribute.MinX, floatFields[0].value),
+                                Mathf.Max(attribute.MinY, floatFields[1].value),
+                                Mathf.Max(attribute.MinZ, floatFields[2].value));
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
-                            if (isDragging) field.value = property.vector3Value;
+                            
+                            for (int i = 0; i < floatFields.Count; i++)
+                                if (floatField != floatFields[i] || isDragging)
+                                    floatFields[i].SetValueWithoutNotify(property.vector3Value[i]);
                         });
                     }
                 }
                 else if (property.propertyType == SerializedPropertyType.Vector3Int)
                 {
                     var field = parent.Q<Vector3IntField>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    foreach (var integerField in parent.Query<IntegerField>().ToList())
+                    var intFields = parent.Query<IntegerField>().ToList();
+                    foreach (var intField in intFields)
                     {
-                        integerField.RegisterCallback<ChangeEvent<int>>(_ =>
+                        HandleFocusAndDragging(field, property.serializedObject);
+                        intField.RegisterCallback<ChangeEvent<int>>(_ =>
                         {
                             if (!isFocused) return;
                             property.vector3IntValue = new(
-                                Mathf.Max((int)attribute.MinX, field.value.x),
-                                Mathf.Max((int)attribute.MinY, field.value.y),
-                                Mathf.Max((int)attribute.MinZ, field.value.z));
+                                Mathf.Max((int)attribute.MinX, intFields[0].value),
+                                Mathf.Max((int)attribute.MinY, intFields[1].value),
+                                Mathf.Max((int)attribute.MinZ, intFields[2].value));
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
-                            if (isDragging) field.value = property.vector3IntValue;
+                            
+                            for (int i = 0; i < intFields.Count; i++)
+                                if (intField != intFields[i] || isDragging)
+                                    intFields[i].SetValueWithoutNotify(property.vector3IntValue[i]);
                         });
                     }
                 }
