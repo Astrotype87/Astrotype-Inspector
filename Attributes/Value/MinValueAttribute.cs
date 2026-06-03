@@ -227,6 +227,42 @@ namespace AstrotypeInspector.Editor
                         });
                     }
                 }
+                else if (property.propertyType == SerializedPropertyType.Vector2)
+                {
+                    var field = parent.Q<Vector2Field>();
+                    HandleFocusAndDragging(field, property.serializedObject);
+                    foreach (var floatField in parent.Query<FloatField>().ToList())
+                    {
+                        floatField.RegisterCallback<ChangeEvent<float>>(_ =>
+                        {
+                            if (!isFocused) return;
+                            property.vector2Value = new(
+                                Mathf.Max(attribute.MinX, field.value.x),
+                                Mathf.Max(attribute.MinY, field.value.y));
+                            property.serializedObject.ApplyModifiedProperties();
+                            property.serializedObject.Update();
+                            if (isDragging) field.value = property.vector2Value;
+                        });
+                    }
+                }
+                else if (property.propertyType == SerializedPropertyType.Vector2Int)
+                {
+                    var field = parent.Q<Vector2IntField>();
+                    HandleFocusAndDragging(field, property.serializedObject);
+                    foreach (var integerField in parent.Query<IntegerField>().ToList())
+                    {
+                        integerField.RegisterCallback<ChangeEvent<int>>(_ =>
+                        {
+                            if (!isFocused) return;
+                            property.vector2IntValue = new(
+                                Mathf.Max((int)attribute.MinX, field.value.x),
+                                Mathf.Max((int)attribute.MinY, field.value.y));
+                            property.serializedObject.ApplyModifiedProperties();
+                            property.serializedObject.Update();
+                            if (isDragging) field.value = property.vector2IntValue;
+                        });
+                    }
+                }
                 else if (property.propertyType == SerializedPropertyType.Vector3)
                 {
                     var field = parent.Q<Vector3Field>();
@@ -243,6 +279,45 @@ namespace AstrotypeInspector.Editor
                             property.serializedObject.ApplyModifiedProperties();
                             property.serializedObject.Update();
                             if (isDragging) field.value = property.vector3Value;
+                        });
+                    }
+                }
+                else if (property.propertyType == SerializedPropertyType.Vector3Int)
+                {
+                    var field = parent.Q<Vector3IntField>();
+                    HandleFocusAndDragging(field, property.serializedObject);
+                    foreach (var integerField in parent.Query<IntegerField>().ToList())
+                    {
+                        integerField.RegisterCallback<ChangeEvent<int>>(_ =>
+                        {
+                            if (!isFocused) return;
+                            property.vector3IntValue = new(
+                                Mathf.Max((int)attribute.MinX, field.value.x),
+                                Mathf.Max((int)attribute.MinY, field.value.y),
+                                Mathf.Max((int)attribute.MinZ, field.value.z));
+                            property.serializedObject.ApplyModifiedProperties();
+                            property.serializedObject.Update();
+                            if (isDragging) field.value = property.vector3IntValue;
+                        });
+                    }
+                }
+                else if (property.propertyType == SerializedPropertyType.Vector4)
+                {
+                    var field = parent.Q<Vector4Field>();
+                    HandleFocusAndDragging(field, property.serializedObject);
+                    foreach (var floatField in parent.Query<FloatField>().ToList())
+                    {
+                        floatField.RegisterCallback<ChangeEvent<float>>(_ =>
+                        {
+                            if (!isFocused) return;
+                            property.vector4Value = new(
+                                Mathf.Max(attribute.MinX, field.value.x),
+                                Mathf.Max(attribute.MinY, field.value.y),
+                                Mathf.Max(attribute.MinZ, field.value.z),
+                                Mathf.Max(attribute.MinW, field.value.w));
+                            property.serializedObject.ApplyModifiedProperties();
+                            property.serializedObject.Update();
+                            if (isDragging) field.value = property.vector4Value;
                         });
                     }
                 }
