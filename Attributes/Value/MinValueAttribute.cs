@@ -79,56 +79,28 @@ namespace AstrotypeInspector.Editor
                 var attribute = this.attribute as MinValueAttribute;
                 
                 if (property.propertyType == SerializedPropertyType.Float)
-                {
-                    property.floatValue = Mathf.Max(attribute.MinX, property.floatValue);
-                }
+                    property.floatValue = ValidateMin(attribute, property.floatValue);
+                
                 else if (property.propertyType == SerializedPropertyType.Integer)
-                {
-                    property.intValue = Mathf.Max((int)attribute.MinX, property.intValue);
-                }
+                    property.intValue = ValidateMin(attribute, property.intValue);
+                
                 else if (property.propertyType == SerializedPropertyType.Vector2)
-                {
-                    Vector2 value = property.vector2Value;
-                    property.vector2Value = new(
-                        Mathf.Max(attribute.MinX, value.x),
-                        Mathf.Max(attribute.MinY, value.y));
-                }
+                    property.vector2Value = ValidateMin(attribute, property.vector2Value);
+                
                 else if (property.propertyType == SerializedPropertyType.Vector2Int)
-                {
-                    Vector2Int value = property.vector2IntValue;
-                    property.vector2IntValue = new(
-                        Mathf.Max((int)attribute.MinX, value.x),
-                        Mathf.Max((int)attribute.MinY, value.y));
-                }
+                    property.vector2IntValue = ValidateMin(attribute, property.vector2IntValue);
+                
                 else if (property.propertyType == SerializedPropertyType.Vector3)
-                {
-                    Vector3 value = property.vector3Value;
-                    property.vector3Value = new(
-                        Mathf.Max(attribute.MinX, value.x),
-                        Mathf.Max(attribute.MinY, value.y),
-                        Mathf.Max(attribute.MinZ, value.z));
-                }
+                    property.vector3Value = ValidateMin(attribute, property.vector3Value);
+                
                 else if (property.propertyType == SerializedPropertyType.Vector3Int)
-                {
-                    Vector3Int value = property.vector3IntValue;
-                    property.vector3IntValue = new(
-                        Mathf.Max((int)attribute.MinX, value.x),
-                        Mathf.Max((int)attribute.MinY, value.y),
-                        Mathf.Max((int)attribute.MinZ, value.z));
-                }
+                    property.vector3IntValue = ValidateMin(attribute, property.vector3IntValue);
+                
                 else if (property.propertyType == SerializedPropertyType.Vector4)
-                {
-                    Vector4 value = property.vector4Value;
-                    property.vector4Value = new(
-                        Mathf.Max(attribute.MinX, value.x),
-                        Mathf.Max(attribute.MinY, value.y),
-                        Mathf.Max(attribute.MinZ, value.z),
-                        Mathf.Max(attribute.MinW, value.w));
-                }
+                    property.vector4Value = ValidateMin(attribute, property.vector4Value);
+                
                 else
-                {
                     EditorGUI.LabelField(position, label.text, InvalidTypeMessage);
-                }
             }
         }
         
