@@ -42,7 +42,7 @@ namespace AstrotypeInspector.Editor
     [CustomPropertyDrawer(typeof(MinValueAttribute))]
     public class MinValueDrawer : PropertyDrawer
     {
-        private const string InvalidTypeMessage = "Use MinValue with float, int or Vector.";
+        private const string InvalidTypeMessage = "Use MinValue with numeric or vector types.";
         
         private bool isFocused;
         private bool isDragging;
@@ -55,6 +55,12 @@ namespace AstrotypeInspector.Editor
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            if (!IsNumericOrVector(property.propertyType))
+            {
+                EditorGUI.LabelField(position, label.text, InvalidTypeMessage);
+                return;
+            }
+            
             EditorGUI.BeginChangeCheck();
             EditorGUI.PropertyField(position, property, label, true);
             if (EditorGUI.EndChangeCheck())
@@ -81,15 +87,21 @@ namespace AstrotypeInspector.Editor
                 
                 else if (property.propertyType == SerializedPropertyType.Vector4)
                     property.vector4Value = ValidateMin(attribute, property.vector4Value);
-                
-                else
-                    EditorGUI.LabelField(position, label.text, InvalidTypeMessage);
             }
         }
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var attribute = this.attribute as MinValueAttribute;
+            if (!IsNumericOrVector(property.propertyType))
+            {
+                var label = new Label(InvalidTypeMessage);
+                label.AddToClassList("unity-base-field__label");
+                label.style.marginLeft = 3;
+                label.style.marginBottom = 1;
+                label.style.marginTop = 1;
+                label.style.marginRight = 0;
+                return label;
+            }
             
             // Create property field
             var propertyField = new PropertyField(property);
@@ -97,6 +109,7 @@ namespace AstrotypeInspector.Editor
             {
                 // Unwrap property field wrapper
                 propertyField.UnwrapElement(out var parent);
+                var attribute = this.attribute as MinValueAttribute;
                 
                 if (property.propertyType == SerializedPropertyType.Float)
                 {
@@ -322,6 +335,15 @@ namespace AstrotypeInspector.Editor
             return propertyField;
         }
         
+        
+        private bool IsNumericOrVector(SerializedPropertyType propertyType)
+        {
+            return propertyType
+                is SerializedPropertyType.Float or SerializedPropertyType.Integer
+                or SerializedPropertyType.Vector2 or SerializedPropertyType.Vector2Int
+                or SerializedPropertyType.Vector3 or SerializedPropertyType.Vector3Int
+                or SerializedPropertyType.Vector4;
+        }
         
         private void HandleFocusAndDragging(BindableElement element, SerializedObject serializedObject)
         {
