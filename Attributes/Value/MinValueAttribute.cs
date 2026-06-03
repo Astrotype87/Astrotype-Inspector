@@ -183,7 +183,7 @@ namespace AstrotypeInspector.Editor
                 }
                 else if (property.propertyType == SerializedPropertyType.Integer)
                 {
-                    if (property.type == "int")
+                    if (property.type is "int" or "short" or "ushort" or "sbyte" or "byte")
                     {
                         var field = parent.Q<IntegerField>();
                         HandleFocusAndDragging(field, property.serializedObject);
