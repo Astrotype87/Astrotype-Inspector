@@ -399,6 +399,43 @@ namespace AstrotypeInspector.Editor
             }
         }
         
+        
+        private static byte ValidateMin(MinValueAttribute attribute, byte value) => Math.Max((byte)attribute.MinX, value);
+        private static sbyte ValidateMin(MinValueAttribute attribute, sbyte value) => Math.Max((sbyte)attribute.MinX, value);
+        private static short ValidateMin(MinValueAttribute attribute, short value) => Math.Max((short)attribute.MinX, value);
+        private static ushort ValidateMin(MinValueAttribute attribute, ushort value) => Math.Max((ushort)attribute.MinX, value);
+        
+        private static int ValidateMin(MinValueAttribute attribute, int value) => Math.Max((int)attribute.MinX, value);
+        private static uint ValidateMin(MinValueAttribute attribute, uint value) => Math.Max((uint)attribute.MinX, value);
+        private static long ValidateMin(MinValueAttribute attribute, long value) => Math.Max((long)attribute.MinX, value);
+        private static ulong ValidateMin(MinValueAttribute attribute, ulong value) => Math.Max((ulong)attribute.MinX, value);
+        
+        private static float ValidateMin(MinValueAttribute attribute, float value) => Math.Max(attribute.MinX, value);
+        private static double ValidateMin(MinValueAttribute attribute, double value) => Math.Max(attribute.MinX, value);
+        
+        private static Vector2 ValidateMin(MinValueAttribute attribute, Vector2 value) =>
+            new(Math.Max(attribute.MinX, value.x),
+                Math.Max(attribute.MinY, value.y));
+        
+        private static Vector2Int ValidateMin(MinValueAttribute attribute, Vector2Int value) =>
+            new(Math.Max((int)attribute.MinX, value.x),
+                Math.Max((int)attribute.MinY, value.y));
+        
+        private static Vector3 ValidateMin(MinValueAttribute attribute, Vector3 value) =>
+            new(Math.Max(attribute.MinX, value.x),
+                Math.Max(attribute.MinY, value.y),
+                Math.Max(attribute.MinZ, value.z));
+        
+        private static Vector3Int ValidateMin(MinValueAttribute attribute, Vector3Int value) =>
+            new(Math.Max((int)attribute.MinX, value.x),
+                Math.Max((int)attribute.MinY, value.y),
+                Math.Max((int)attribute.MinZ, value.z));
+        
+        private static Vector4 ValidateMin(MinValueAttribute attribute, Vector4 value) =>
+            new(Math.Max(attribute.MinX, value.x),
+                Math.Max(attribute.MinY, value.y),
+                Math.Max(attribute.MinZ, value.z),
+                Math.Max(attribute.MinW, value.w));
     }
 }
 #endif
