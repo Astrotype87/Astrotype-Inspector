@@ -63,6 +63,7 @@ namespace AstrotypeInspector.Editor
         private bool isFocused;
         private bool isDragging;
         
+        
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             return EditorGUI.GetPropertyHeight(property, label, true);
@@ -357,12 +358,23 @@ namespace AstrotypeInspector.Editor
         }
         
         
-        private static int ValidateMin(MinValueAttribute attribute, int value) => Math.Max((int)attribute.MinX, value);
-        private static uint ValidateMin(MinValueAttribute attribute, uint value) => Math.Max((uint)attribute.MinX, value);
-        private static long ValidateMin(MinValueAttribute attribute, long value) => Math.Max((long)attribute.MinX, value);
-        private static ulong ValidateMin(MinValueAttribute attribute, ulong value) => Math.Max((ulong)attribute.MinX, value);
-        private static float ValidateMin(MinValueAttribute attribute, float value) => Math.Max(attribute.MinX, value);
-        private static double ValidateMin(MinValueAttribute attribute, double value) => Math.Max(attribute.MinX, value);
+        private static int ValidateMin(MinValueAttribute attribute, int value) =>
+            Math.Max((int)attribute.MinX, value);
+        
+        private static uint ValidateMin(MinValueAttribute attribute, uint value) =>
+            Math.Max(attribute.MinX < 0 ? 0 : (uint)attribute.MinX, value);
+        
+        private static long ValidateMin(MinValueAttribute attribute, long value) =>
+            Math.Max((long)attribute.MinX, value);
+        
+        private static ulong ValidateMin(MinValueAttribute attribute, ulong value) =>
+            Math.Max(attribute.MinX < 0 ? 0 : (ulong)attribute.MinX, value);
+        
+        private static float ValidateMin(MinValueAttribute attribute, float value) =>
+            Math.Max(attribute.MinX, value);
+        
+        private static double ValidateMin(MinValueAttribute attribute, double value) =>
+            Math.Max(attribute.MinX, value);
         
         private static Vector2 ValidateMin(MinValueAttribute attribute, Vector2 value) =>
             new(Math.Max(attribute.MinX, value.x),
