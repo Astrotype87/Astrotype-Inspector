@@ -21,23 +21,7 @@ namespace AstrotypeInspector
             MinW = min;
         }
         
-        public MinValueAttribute(float minX, float minY)
-        {
-            MinX = minX;
-            MinY = minY;
-            MinZ = 0;
-            MinW = 0;
-        }
-        
-        public MinValueAttribute(float minX, float minY, float minZ)
-        {
-            MinX = minX;
-            MinY = minY;
-            MinZ = minZ;
-            MinW = 0;
-        }
-        
-        public MinValueAttribute(float minX, float minY, float minZ, float minW)
+        public MinValueAttribute(float minX, float minY = 0, float minZ = 0, float minW = 0)
         {
             MinX = minX;
             MinY = minY;
