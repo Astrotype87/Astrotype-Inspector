@@ -173,7 +173,7 @@ namespace AstrotypeInspector.Editor
                 {
                     var field = parent.Q<Vector2IntField>();
                     var intFields = parent.Query<IntegerField>().ToList();
-                    RegisterVectorField<float>(field, property.serializedObject, intFields,
+                    RegisterVectorField<int>(field, property.serializedObject, intFields,
                         () => property.vector2IntValue = ValidateMin(attribute, new Vector2Int(
                             intFields[0].value, intFields[1].value)),
                         (i) => intFields[i].SetValueWithoutNotify(property.vector2IntValue[i]));
@@ -191,8 +191,8 @@ namespace AstrotypeInspector.Editor
                 {
                     var field = parent.Q<Vector3IntField>();
                     var intFields = parent.Query<IntegerField>().ToList();
-                    RegisterVectorField<float>(field, property.serializedObject, intFields,
-                        () =>property.vector3IntValue =  ValidateMin(attribute, new Vector3Int(
+                    RegisterVectorField<int>(field, property.serializedObject, intFields,
+                        () => property.vector3IntValue = ValidateMin(attribute, new Vector3Int(
                             intFields[0].value, intFields[1].value, intFields[2].value)),
                         (i) => intFields[i].SetValueWithoutNotify(property.vector3IntValue[i]));
                 }
@@ -300,12 +300,12 @@ namespace AstrotypeInspector.Editor
                 numericField.RegisterCallback<ChangeEvent<TValue>>(_ =>
                 {
                     if (!isFocused) return;
-                    updateSerializedValue(); // () => property.vector2Value = ValidateMin(attribute, new Vector2(floatFields[0].value, floatFields[1].value)
+                    updateSerializedValue();
                     serializedObject.ApplyModifiedProperties();
                     serializedObject.Update();
                     for (int i = 0; i < numericFields.Count; i++)
-                        if (numericField != numericField[i] || isDragging)
-                            updateNumericFieldValue(i); // i => floatFields[i].SetValueWithoutNotify(property.vector2Value[i]);
+                        if (numericField != numericFields[i] || isDragging)
+                            updateNumericFieldValue(i);
                 });
             }
         }
