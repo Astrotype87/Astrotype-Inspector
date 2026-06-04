@@ -116,28 +116,16 @@ namespace AstrotypeInspector.Editor
                     if (property.type == "float")
                     {
                         var field = parent.Q<FloatField>();
-                        HandleFocusAndDragging(field, property.serializedObject);
-                        field.RegisterCallback<InputEvent>(_ =>
-                        {
-                            if (!isFocused) return;
-                            property.floatValue = ValidateMin(attribute, field.value);
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            if (isDragging) field.value = property.floatValue;
-                        });
+                        RegisterNumericField(field, property.serializedObject,
+                            () => property.floatValue = ValidateMin(attribute, field.value),
+                            () => field.value = property.floatValue);
                     }
                     else if (property.type == "double")
                     {
                         var field = parent.Q<DoubleField>();
-                        HandleFocusAndDragging(field, property.serializedObject);
-                        field.RegisterCallback<InputEvent>(_ =>
-                        {
-                            if (!isFocused) return;
-                            property.doubleValue = ValidateMin(attribute, field.value);
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            if (isDragging) field.value = property.doubleValue;
-                        });
+                        RegisterNumericField(field, property.serializedObject,
+                            () => property.doubleValue = ValidateMin(attribute, field.value),
+                            () => field.value = property.doubleValue);
                     }
                 }
                 else if (property.propertyType == SerializedPropertyType.Integer)
@@ -145,56 +133,33 @@ namespace AstrotypeInspector.Editor
                     if (property.type is "int" or "short" or "ushort" or "sbyte" or "byte")
                     {
                         var field = parent.Q<IntegerField>();
-                        HandleFocusAndDragging(field, property.serializedObject);
-                        field.RegisterCallback<InputEvent>(_ =>
-                        {
-                            if (!isFocused) return;
-                            property.intValue = ValidateMin(attribute, field.value);
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            if (isDragging) field.value = property.intValue;
-                        });
+                        RegisterNumericField(field, property.serializedObject,
+                            () => property.intValue = ValidateMin(attribute, field.value),
+                            () => field.value = property.intValue);
                     }
                     else if (property.type == "long")
                     {
                         var field = parent.Q<LongField>();
-                        HandleFocusAndDragging(field, property.serializedObject);
-                        field.RegisterCallback<InputEvent>(_ =>
-                        {
-                            if (!isFocused) return;
-                            property.longValue = ValidateMin(attribute, field.value);
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            if (isDragging) field.value = property.longValue;
-                        });
+                        RegisterNumericField(field, property.serializedObject,
+                            () => property.longValue = ValidateMin(attribute, field.value),
+                            () => field.value = property.longValue);
                     }
                     else if (property.type == "uint")
                     {
                         var field = parent.Q<UnsignedIntegerField>();
-                        HandleFocusAndDragging(field, property.serializedObject);
-                        field.RegisterCallback<InputEvent>(_ =>
-                        {
-                            if (!isFocused) return;
-                            property.uintValue = ValidateMin(attribute, field.value);
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            if (isDragging) field.value = property.uintValue;
-                        });
+                        RegisterNumericField(field, property.serializedObject,
+                            () => property.uintValue = ValidateMin(attribute, field.value),
+                            () => field.value = property.uintValue);
                     }
                     else if (property.type == "ulong")
                     {
                         var field = parent.Q<UnsignedLongField>();
-                        HandleFocusAndDragging(field, property.serializedObject);
-                        field.RegisterCallback<InputEvent>(_ =>
-                        {
-                            if (!isFocused) return;
-                            property.ulongValue = ValidateMin(attribute, field.value);
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            if (isDragging) field.value = property.ulongValue;
-                        });
+                        RegisterNumericField(field, property.serializedObject,
+                            () => property.ulongValue = ValidateMin(attribute, field.value),
+                            () => field.value = property.ulongValue);
                     }
                 }
+                
                 else if (property.propertyType == SerializedPropertyType.Vector2)
                 {
                     var field = parent.Q<Vector2Field>();
@@ -366,6 +331,24 @@ namespace AstrotypeInspector.Editor
                 label.RegisterCallback<PointerCaptureEvent>(_ => isDragging = true);
                 label.RegisterCallback<PointerCaptureOutEvent>(_ => isDragging = false);
             }
+        }
+        
+        
+        private void RegisterNumericField(
+            BindableElement numericField,
+            SerializedObject serializedObject,
+            Action updateSerializedValue,
+            Action updateNumericFieldValue)
+        {
+            HandleFocusAndDragging(numericField, serializedObject);
+            numericField.RegisterCallback<InputEvent>(_ =>
+            {
+                if (!isFocused) return;
+                updateSerializedValue();
+                serializedObject.ApplyModifiedProperties();
+                serializedObject.Update();
+                if (isDragging) updateNumericFieldValue();
+            });
         }
         
         
