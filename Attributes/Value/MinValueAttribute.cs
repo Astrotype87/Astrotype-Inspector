@@ -34,6 +34,7 @@ namespace AstrotypeInspector
 #if UNITY_EDITOR
 namespace AstrotypeInspector.Editor
 {
+    using System.Collections.Generic;
     using UnityEngine;
     using UnityEditor;
     using UnityEngine.UIElements;
@@ -159,102 +160,49 @@ namespace AstrotypeInspector.Editor
                             () => field.value = property.ulongValue);
                     }
                 }
-                
                 else if (property.propertyType == SerializedPropertyType.Vector2)
                 {
                     var field = parent.Q<Vector2Field>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    
                     var floatFields = parent.Query<FloatField>().ToList();
-                    foreach (var floatField in floatFields)
-                    {
-                        floatField.RegisterCallback<ChangeEvent<float>>(_ =>
-                        {
-                            if (!isFocused) return;
-                            property.vector2Value = ValidateMin(attribute, new Vector2(
-                                floatFields[0].value, floatFields[1].value));
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            
-                            for (int i = 0; i < floatFields.Count; i++)
-                                if (floatField != floatFields[i] || isDragging)
-                                    floatFields[i].SetValueWithoutNotify(property.vector2Value[i]);
-                        });
-                    }
+                    RegisterVectorField<float>(field, property.serializedObject, floatFields,
+                        () => property.vector2Value = ValidateMin(attribute, new Vector2(
+                            floatFields[0].value, floatFields[1].value)),
+                        (i) => floatFields[i].SetValueWithoutNotify(property.vector2Value[i]));
                 }
                 else if (property.propertyType == SerializedPropertyType.Vector2Int)
                 {
                     var field = parent.Q<Vector2IntField>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    
                     var intFields = parent.Query<IntegerField>().ToList();
-                    foreach (var intField in intFields)
-                    {
-                        intField.RegisterCallback<ChangeEvent<int>>(_ =>
-                        {
-                            if (!isFocused) return;
-                            property.vector2IntValue = ValidateMin(attribute, new Vector2Int(
-                                intFields[0].value, intFields[1].value));
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            
-                            for (int i = 0; i < intFields.Count; i++)
-                                if (intField != intFields[i] || isDragging)
-                                    intFields[i].SetValueWithoutNotify(property.vector2IntValue[i]);
-                        });
-                    }
+                    RegisterVectorField<float>(field, property.serializedObject, intFields,
+                        () => property.vector2IntValue = ValidateMin(attribute, new Vector2Int(
+                            intFields[0].value, intFields[1].value)),
+                        (i) => intFields[i].SetValueWithoutNotify(property.vector2IntValue[i]));
                 }
                 else if (property.propertyType == SerializedPropertyType.Vector3)
                 {
                     var field = parent.Q<Vector3Field>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    
                     var floatFields = parent.Query<FloatField>().ToList();
-                    foreach (var floatField in floatFields)
-                    {
-                        floatField.RegisterCallback<ChangeEvent<float>>(_ =>
-                        {
-                            if (!isFocused) return;
-                            property.vector3Value = ValidateMin(attribute, new Vector3(
-                                floatFields[0].value, floatFields[1].value, floatFields[2].value));
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            
-                            for (int i = 0; i < floatFields.Count; i++)
-                                if (floatField != floatFields[i] || isDragging)
-                                    floatFields[i].SetValueWithoutNotify(property.vector3Value[i]);
-                        });
-                    }
+                    RegisterVectorField<float>(field, property.serializedObject, floatFields,
+                        () => property.vector3Value = ValidateMin(attribute, new Vector3(
+                            floatFields[0].value, floatFields[1].value, floatFields[2].value)),
+                        (i) => floatFields[i].SetValueWithoutNotify(property.vector3Value[i]));
                 }
                 else if (property.propertyType == SerializedPropertyType.Vector3Int)
                 {
                     var field = parent.Q<Vector3IntField>();
-                    HandleFocusAndDragging(field, property.serializedObject);
-                    
                     var intFields = parent.Query<IntegerField>().ToList();
-                    foreach (var intField in intFields)
-                    {
-                        intField.RegisterCallback<ChangeEvent<int>>(_ =>
-                        {
-                            if (!isFocused) return;
-                            property.vector3IntValue = ValidateMin(attribute, new Vector3Int(
-                                intFields[0].value, intFields[1].value, intFields[2].value));
-                            property.serializedObject.ApplyModifiedProperties();
-                            property.serializedObject.Update();
-                            
-                            for (int i = 0; i < intFields.Count; i++)
-                                if (intField != intFields[i] || isDragging)
-                                    intFields[i].SetValueWithoutNotify(property.vector3IntValue[i]);
-                        });
-                    }
+                    RegisterVectorField<float>(field, property.serializedObject, intFields,
+                        () =>property.vector3IntValue =  ValidateMin(attribute, new Vector3Int(
+                            intFields[0].value, intFields[1].value, intFields[2].value)),
+                        (i) => intFields[i].SetValueWithoutNotify(property.vector3IntValue[i]));
                 }
                 else if (property.propertyType == SerializedPropertyType.Vector4)
                 {
                     // Vector4 is usually displayed as foldout, but check for Vector4Field as well
                     BindableElement field = parent.Q<Foldout>();
                     field ??= parent.Q<Vector4Field>();
-                    
                     var floatFields = parent.Query<FloatField>().ToList();
+                    
                     if (field is Foldout)
                     {
                         foreach (var floatField in floatFields)
@@ -277,22 +225,10 @@ namespace AstrotypeInspector.Editor
                     }
                     else if (field is Vector4Field)
                     {
-                        HandleFocusAndDragging(field, property.serializedObject);
-                        foreach (var floatField in floatFields)
-                        {
-                            floatField.RegisterCallback<ChangeEvent<float>>(_ =>
-                            {
-                                if (!isFocused) return;
-                                property.vector4Value = ValidateMin(attribute, new Vector4(
-                                    floatFields[0].value, floatFields[1].value, floatFields[2].value, floatFields[3].value));
-                                property.serializedObject.ApplyModifiedProperties();
-                                property.serializedObject.Update();
-                                
-                                for (int i = 0; i < floatFields.Count; i++)
-                                    if (floatField != floatFields[i] || isDragging)
-                                        floatFields[i].SetValueWithoutNotify(property.vector4Value[i]);
-                            });
-                        }
+                        RegisterVectorField<float>(field, property.serializedObject, floatFields,
+                            () => property.vector4Value = ValidateMin(attribute, new Vector4(
+                                floatFields[0].value, floatFields[1].value, floatFields[2].value, floatFields[3].value)),
+                            (i) => floatFields[i].SetValueWithoutNotify(property.vector4Value[i]));
                     }
                 }
             });
@@ -349,6 +285,29 @@ namespace AstrotypeInspector.Editor
                 serializedObject.Update();
                 if (isDragging) updateNumericFieldValue();
             });
+        }
+        
+        private void RegisterVectorField<TValue>(
+            BindableElement vectorField,
+            SerializedObject serializedObject,
+            IReadOnlyList<BindableElement> numericFields,
+            Action updateSerializedValue,
+            Action<int> updateNumericFieldValue)
+        {
+            HandleFocusAndDragging(vectorField, serializedObject);
+            foreach (var numericField in numericFields)
+            {
+                numericField.RegisterCallback<ChangeEvent<TValue>>(_ =>
+                {
+                    if (!isFocused) return;
+                    updateSerializedValue(); // () => property.vector2Value = ValidateMin(attribute, new Vector2(floatFields[0].value, floatFields[1].value)
+                    serializedObject.ApplyModifiedProperties();
+                    serializedObject.Update();
+                    for (int i = 0; i < numericFields.Count; i++)
+                        if (numericField != numericField[i] || isDragging)
+                            updateNumericFieldValue(i); // i => floatFields[i].SetValueWithoutNotify(property.vector2Value[i]);
+                });
+            }
         }
         
         
