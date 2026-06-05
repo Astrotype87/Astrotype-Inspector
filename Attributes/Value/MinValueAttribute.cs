@@ -6,7 +6,7 @@ namespace AstrotypeInspector
 {
     [Conditional(Symbols.UNITY_EDITOR), Conditional(Symbols.INCLUDE_IN_BUILD)]
     [AttributeUsage(AttributeTargets.Field)]
-    public class MinValueAttribute : PropertyAttribute
+    public sealed class MinValueAttribute : PropertyAttribute
     {
         public readonly float MinX;
         public readonly float MinY;
@@ -39,7 +39,7 @@ namespace AstrotypeInspector.Editor
     using UnityEditor;
     using UnityEngine.UIElements;
     using UnityEditor.UIElements;
-
+    
     [CustomPropertyDrawer(typeof(MinValueAttribute))]
     public class MinValueDrawer : PropertyDrawer
     {
