@@ -1,6 +1,6 @@
 # Astrotype Inspector
 
-Lightweight and non-destructive inspector attributes, with optional advanced inspector mode.
+Lightweight and non-destructive inspector attributes for Unity, with optional advanced inspector mode.
 Solving major problems and annoyances from existing inspector attribute libraries.
 
 ## The Problem
