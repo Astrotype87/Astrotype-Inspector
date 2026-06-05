@@ -214,28 +214,21 @@ namespace AstrotypeInspector.Editor
                             return;
                         }
                         
+                        // If foldout is closed, register to foldout expand change event
                         foldout.RegisterValueChangedCallback(OnFoldoutValueChange);
                         void OnFoldoutValueChange(ChangeEvent<bool> changeEvent)
                         {
-                            Debug.Log($"Foldout value changed! isExpanded = {changeEvent.newValue}");
+                            // If foldout is expanded, check each frame when FloatFields are generated.
                             if (!changeEvent.newValue) return;
-                            
-                            // If foldout is expanded
-                            Debug.Log($"Begin per-frame search for generated Vector4 foldout FloatFields");
                             foldoutSearchSchedule = foldout.schedule.Execute(_ =>
                             {
-                                foldoutSearchAttempts++;
+                                foldoutSearchAttempts++; // The check times out after 5 frames.
                                 var floatFields = parent.Query<FloatField>().ToList();
-                                bool areFieldsCreated = floatFields.Count > 0;
-                                bool isSearchTimeout = foldoutSearchAttempts > 5;
                                 
-                                Debug.Log($"Foldout search attempt {foldoutSearchAttempts} --- FloatField count: {floatFields.Count}");
-                                if (areFieldsCreated)
-                                {
-                                    Debug.Log($"FloatFields found! Registering, stopping per-frame search, and unsubscribing value change callback.");
+                                if (floatFields.Count > 0)
                                     RegisterFloatFields(floatFields);
-                                }
-                                if (areFieldsCreated || isSearchTimeout)
+                                
+                                if (floatFields.Count > 0 || foldoutSearchAttempts > 5)
                                 {
                                     foldoutSearchSchedule.Pause();
                                     foldout.UnregisterValueChangedCallback(OnFoldoutValueChange);
@@ -246,7 +239,6 @@ namespace AstrotypeInspector.Editor
                         
                         void RegisterFloatFields(List<FloatField> floatFields)
                         {
-                            Debug.Log($"Registering Vector4 Foldout's FloatFields");
                             foreach (var floatField in floatFields)
                             {
                                 HandleFocusAndDragging(floatField, property.serializedObject);
@@ -268,8 +260,6 @@ namespace AstrotypeInspector.Editor
                     }
                     else if (field is Vector4Field)
                     {
-                        Debug.Log($"Vector4 is Vector4Field");
-                        
                         var floatFields = parent.Query<FloatField>().ToList();
                         RegisterVectorField<float>(field, property.serializedObject, floatFields,
                             () => property.vector4Value = ValidateMin(attribute, new Vector4(
@@ -294,17 +284,14 @@ namespace AstrotypeInspector.Editor
         
         private void HandleFocusAndDragging(BindableElement element, SerializedObject serializedObject)
         {
-            Debug.Log($"{element.name} subscribes HandleFocusAndDragging()");
             // Detect property field focus
             element.RegisterCallback<FocusInEvent>(_ =>
             {
-                Debug.Log($"{element.name} - FocusInEvent --> isFocused = true");
                 isFocused = true;
                 element.Unbind();
             });
             element.RegisterCallback<FocusOutEvent>(_ =>
             {
-                Debug.Log($"{element.name} - FocusOutEvent --> isFocused = false");
                 isFocused = false;
                 element.Bind(serializedObject);
             });
@@ -313,14 +300,8 @@ namespace AstrotypeInspector.Editor
             var labels = element.Query<Label>(className: "unity-base-text-field__label").ToList();
             foreach (var label in labels)
             {
-                label.RegisterCallback<PointerCaptureEvent>(_ => {
-                    Debug.Log($"{element.name} - PointerCaptureEvent --> isDragging = true");
-                    isDragging = true;
-                });
-                label.RegisterCallback<PointerCaptureOutEvent>(_ => {
-                    Debug.Log($"{element.name} - PointerCaptureOutEvent --> isDragging = false");
-                    isDragging = false;
-                });
+                label.RegisterCallback<PointerCaptureEvent>(_ => isDragging = true);
+                label.RegisterCallback<PointerCaptureOutEvent>(_ => isDragging = false);
             }
         }
         
