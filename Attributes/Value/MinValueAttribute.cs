@@ -48,6 +48,9 @@ namespace AstrotypeInspector.Editor
         private bool isFocused;
         private bool isDragging;
         
+        private IVisualElementScheduledItem foldoutSearchSchedule;
+        private float foldoutSearchAttempts;
+        
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -201,30 +204,63 @@ namespace AstrotypeInspector.Editor
                     // Vector4 is usually displayed as foldout, but check for Vector4Field as well
                     BindableElement field = parent.Q<Foldout>();
                     field ??= parent.Q<Vector4Field>();
-                    var floatFields = parent.Query<FloatField>().ToList();
                     
-                    if (field is Foldout)
+                    if (field is Foldout foldout)
                     {
-                        foreach (var floatField in floatFields)
+                        if (foldout.value)
                         {
-                            HandleFocusAndDragging(floatField, property.serializedObject);
-                            floatField.RegisterCallback<ChangeEvent<float>>(_ =>
+                            var floatFields = parent.Query<FloatField>().ToList();
+                            RegisterFloatFields(floatFields);
+                            return;
+                        }
+                        
+                        // If foldout is closed, register to foldout expand change event
+                        foldout.RegisterValueChangedCallback(OnFoldoutValueChange);
+                        void OnFoldoutValueChange(ChangeEvent<bool> changeEvent)
+                        {
+                            // If foldout is expanded, check each frame when FloatFields are generated.
+                            if (!changeEvent.newValue) return;
+                            foldoutSearchSchedule = foldout.schedule.Execute(_ =>
                             {
-                                if (!isFocused) return;
-                                property.vector4Value = ValidateMin(attribute, new Vector4(
-                                    floatFields[0].value, floatFields[1].value, floatFields[2].value, floatFields[3].value));
-                                property.serializedObject.ApplyModifiedProperties();
-                                property.serializedObject.Update();
+                                foldoutSearchAttempts++; // The check times out after 5 frames.
+                                var floatFields = parent.Query<FloatField>().ToList();
                                 
-                                if (isDragging) {
-                                    for (int i = 0; i < floatFields.Count; i++)
-                                        floatFields[i].value = property.vector4Value[i];
+                                if (floatFields.Count > 0)
+                                    RegisterFloatFields(floatFields);
+                                
+                                if (floatFields.Count > 0 || foldoutSearchAttempts > 5)
+                                {
+                                    foldoutSearchSchedule.Pause();
+                                    foldout.UnregisterValueChangedCallback(OnFoldoutValueChange);
+                                    foldoutSearchAttempts = 0;
                                 }
-                            });
+                            }).Every(1);
+                        }
+                        
+                        void RegisterFloatFields(List<FloatField> floatFields)
+                        {
+                            foreach (var floatField in floatFields)
+                            {
+                                HandleFocusAndDragging(floatField, property.serializedObject);
+                                floatField.RegisterCallback<ChangeEvent<float>>(_ =>
+                                {
+                                    if (!isFocused) return;
+                                    property.vector4Value = ValidateMin(attribute, new Vector4(
+                                        floatFields[0].value, floatFields[1].value, floatFields[2].value, floatFields[3].value));
+                                    property.serializedObject.ApplyModifiedProperties();
+                                    property.serializedObject.Update();
+                                    
+                                    if (isDragging) {
+                                        for (int i = 0; i < floatFields.Count; i++)
+                                            floatFields[i].value = property.vector4Value[i];
+                                    }
+                                });
+                            }
                         }
                     }
                     else if (field is Vector4Field)
                     {
+                        var floatFields = parent.Query<FloatField>().ToList();
                         RegisterVectorField<float>(field, property.serializedObject, floatFields,
                             () => property.vector4Value = ValidateMin(attribute, new Vector4(
                                 floatFields[0].value, floatFields[1].value, floatFields[2].value, floatFields[3].value)),
