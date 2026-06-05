@@ -48,6 +48,9 @@ namespace AstrotypeInspector.Editor
         private bool isFocused;
         private bool isDragging;
         
+        private IVisualElementScheduledItem foldoutSearchSchedule;
+        private float foldoutSearchAttempts;
+        
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -201,30 +204,73 @@ namespace AstrotypeInspector.Editor
                     // Vector4 is usually displayed as foldout, but check for Vector4Field as well
                     BindableElement field = parent.Q<Foldout>();
                     field ??= parent.Q<Vector4Field>();
-                    var floatFields = parent.Query<FloatField>().ToList();
                     
-                    if (field is Foldout)
+                    if (field is Foldout foldout)
                     {
-                        foreach (var floatField in floatFields)
+                        if (foldout.value)
                         {
-                            HandleFocusAndDragging(floatField, property.serializedObject);
-                            floatField.RegisterCallback<ChangeEvent<float>>(_ =>
+                            var floatFields = parent.Query<FloatField>().ToList();
+                            RegisterFloatFields(floatFields);
+                            return;
+                        }
+                        
+                        foldout.RegisterValueChangedCallback(OnFoldoutValueChange);
+                        void OnFoldoutValueChange(ChangeEvent<bool> changeEvent)
+                        {
+                            Debug.Log($"Foldout value changed! isExpanded = {changeEvent.newValue}");
+                            if (!changeEvent.newValue) return;
+                            
+                            // If foldout is expanded
+                            Debug.Log($"Begin per-frame search for generated Vector4 foldout FloatFields");
+                            foldoutSearchSchedule = foldout.schedule.Execute(_ =>
                             {
-                                if (!isFocused) return;
-                                property.vector4Value = ValidateMin(attribute, new Vector4(
-                                    floatFields[0].value, floatFields[1].value, floatFields[2].value, floatFields[3].value));
-                                property.serializedObject.ApplyModifiedProperties();
-                                property.serializedObject.Update();
+                                foldoutSearchAttempts++;
+                                var floatFields = parent.Query<FloatField>().ToList();
+                                bool areFieldsCreated = floatFields.Count > 0;
+                                bool isSearchTimeout = foldoutSearchAttempts > 5;
                                 
-                                if (isDragging) {
-                                    for (int i = 0; i < floatFields.Count; i++)
-                                        floatFields[i].value = property.vector4Value[i];
+                                Debug.Log($"Foldout search attempt {foldoutSearchAttempts} --- FloatField count: {floatFields.Count}");
+                                if (areFieldsCreated)
+                                {
+                                    Debug.Log($"FloatFields found! Registering, stopping per-frame search, and unsubscribing value change callback.");
+                                    RegisterFloatFields(floatFields);
                                 }
-                            });
+                                if (areFieldsCreated || isSearchTimeout)
+                                {
+                                    foldoutSearchSchedule.Pause();
+                                    foldout.UnregisterValueChangedCallback(OnFoldoutValueChange);
+                                    foldoutSearchAttempts = 0;
+                                }
+                            }).Every(1);
+                        }
+                        
+                        void RegisterFloatFields(List<FloatField> floatFields)
+                        {
+                            Debug.Log($"Registering Vector4 Foldout's FloatFields");
+                            foreach (var floatField in floatFields)
+                            {
+                                HandleFocusAndDragging(floatField, property.serializedObject);
+                                floatField.RegisterCallback<ChangeEvent<float>>(_ =>
+                                {
+                                    if (!isFocused) return;
+                                    property.vector4Value = ValidateMin(attribute, new Vector4(
+                                        floatFields[0].value, floatFields[1].value, floatFields[2].value, floatFields[3].value));
+                                    property.serializedObject.ApplyModifiedProperties();
+                                    property.serializedObject.Update();
+                                    
+                                    if (isDragging) {
+                                        for (int i = 0; i < floatFields.Count; i++)
+                                            floatFields[i].value = property.vector4Value[i];
+                                    }
+                                });
+                            }
                         }
                     }
                     else if (field is Vector4Field)
                     {
+                        Debug.Log($"Vector4 is Vector4Field");
+                        
+                        var floatFields = parent.Query<FloatField>().ToList();
                         RegisterVectorField<float>(field, property.serializedObject, floatFields,
                             () => property.vector4Value = ValidateMin(attribute, new Vector4(
                                 floatFields[0].value, floatFields[1].value, floatFields[2].value, floatFields[3].value)),
@@ -248,14 +294,17 @@ namespace AstrotypeInspector.Editor
         
         private void HandleFocusAndDragging(BindableElement element, SerializedObject serializedObject)
         {
+            Debug.Log($"{element.name} subscribes HandleFocusAndDragging()");
             // Detect property field focus
             element.RegisterCallback<FocusInEvent>(_ =>
             {
+                Debug.Log($"{element.name} - FocusInEvent --> isFocused = true");
                 isFocused = true;
                 element.Unbind();
             });
             element.RegisterCallback<FocusOutEvent>(_ =>
             {
+                Debug.Log($"{element.name} - FocusOutEvent --> isFocused = false");
                 isFocused = false;
                 element.Bind(serializedObject);
             });
@@ -264,8 +313,14 @@ namespace AstrotypeInspector.Editor
             var labels = element.Query<Label>(className: "unity-base-text-field__label").ToList();
             foreach (var label in labels)
             {
-                label.RegisterCallback<PointerCaptureEvent>(_ => isDragging = true);
-                label.RegisterCallback<PointerCaptureOutEvent>(_ => isDragging = false);
+                label.RegisterCallback<PointerCaptureEvent>(_ => {
+                    Debug.Log($"{element.name} - PointerCaptureEvent --> isDragging = true");
+                    isDragging = true;
+                });
+                label.RegisterCallback<PointerCaptureOutEvent>(_ => {
+                    Debug.Log($"{element.name} - PointerCaptureOutEvent --> isDragging = false");
+                    isDragging = false;
+                });
             }
         }
         
