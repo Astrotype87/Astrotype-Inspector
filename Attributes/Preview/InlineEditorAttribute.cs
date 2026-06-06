@@ -53,33 +53,15 @@ namespace AstrotypeInspector.Editor
             if (editor == null)
                 return;
             
-            // Create box style
-            GUIStyle boxStyle = new(GUI.skin.box);
-            
             // Draw editor
-            var attribute = (InlineEditorAttribute)this.attribute; 
-            
-            if (attribute.UseMargin)
-            {
-                EditorGUILayout.BeginVertical(boxStyle);
-                EditorGUILayout.Space(-2, false); // top margin
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space(-3, false); // left margin
-                EditorGUILayout.BeginVertical();
-            }
-            
+            GUIStyle boxStyle = new(GUI.skin.box);
+            EditorGUILayout.BeginVertical(boxStyle);
             EditorGUI.indentLevel++;
-            editor.OnInspectorGUI();
-            EditorGUI.indentLevel--;
             
-            if (attribute.UseMargin)
-            {
-                EditorGUILayout.EndVertical();
-                EditorGUILayout.Space(-3, false); // right margin
-                EditorGUILayout.EndHorizontal();
-                // EditorGUILayout.Space(2, false); // bottom margin
-                EditorGUILayout.EndVertical();
-            }
+            editor.OnInspectorGUI();
+            
+            EditorGUI.indentLevel--;
+            EditorGUILayout.EndVertical();
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
