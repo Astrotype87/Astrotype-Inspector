@@ -119,62 +119,23 @@ namespace AstrotypeInspector.Editor
                 // Local variable for cached editor
                 Editor cachedEditor = null;
                 
-                // When foldout is expanded or collapsed
+                
+                // When foldout is expanded or collapsed, create nested inspector if editor container is empty
                 foldout.RegisterValueChangedCallback(e =>
                 {
-                    Debug.Log($"Foldout isExpanded = {foldout.value}");
-                    // Update property isExpanded state
                     property.isExpanded = foldout.value;
-                    
-                    // HOW DO YOU KNOW IF EDITOR IS NOT CREATED YET? editorContainer is empty
-                    // IS THIS A RELIABLE BASIS? yes, because editorContainer is the proof that it contains the nested editor, and it is displayed in UI.
-                    // When foldout is opened and editorContainer is empty, create nested editor
                     if (foldout.value && editorContainer.childCount == 0)
-                    {
-                        Debug.Log($"Foldout is open, and editor container is empty. Attempting to create nested editor.");
-                        
-                        // Abort if object reference is null
-                        if (property.objectReferenceValue == null)
-                        {
-                            Debug.Log($"The object reference is empty. Aborting creation");
-                            return;
-                        }
-                        
-                        // Create cached editor, abort if null
-                        Editor.CreateCachedEditor(property.objectReferenceValue, null, ref cachedEditor);
-                        if (cachedEditor == null)
-                            return;
-                        
-                        // Create inspector GUI and add to editor container
-                        var inspector = cachedEditor.CreateInspectorGUI();
-                        if (inspector != null)
-                        {
-                            inspector.name = GetInlineEditorName(property);
-                            inspector.Bind(cachedEditor.serializedObject);
-                            editorContainer.Add(inspector);
-                            Debug.Log($"Nested editor is created for {GetInlineEditorName(property)}!");
-                        }
-                        else
-                        {
-                            Debug.Log($"{GetInlineEditorName(property)} doesn't have CreateInspectorGUI() implementation.");
-                            // TODO: Implement IMGUIContainer and call editor.OnInspectorGUI();
-                        }
-                    }
+                        editorContainer.Add(CreateNestedInspector());
                 });
                 
                 // Refresh nested editor if object field value is changed
                 var objectField = parent.Q<ObjectField>();
                 objectField.RegisterValueChangedCallback(e =>
                 {
-                    Debug.Log($"Object reference value is changed! Attempting to create nested editor.");
-                    
                     // Hide foldout if object reference is null
                     foldout.style.display = property.objectReferenceValue == null ? DisplayStyle.None : DisplayStyle.Flex;
                     if (!foldout.value)
-                    {
-                        Debug.Log($"The foldout is closed. Aborting creation.");
                         return;
-                    }
                     
                     // Clear container and destroy cached editor
                     editorContainer.Clear();
@@ -182,33 +143,42 @@ namespace AstrotypeInspector.Editor
                         Object.DestroyImmediate(cachedEditor);
                     cachedEditor = null;
                     
+                    // Create nested inspector and add to container
+                    editorContainer.Add(CreateNestedInspector());
+                });
+                
+                VisualElement CreateNestedInspector()
+                {
                     // Abort if object reference is null
                     if (property.objectReferenceValue == null)
-                    {
-                        Debug.Log($"The object reference is empty. Aborting creation.");
-                        return;
-                    }
+                        return null;
                     
                     // Create cached editor, abort if null
                     Editor.CreateCachedEditor(property.objectReferenceValue, null, ref cachedEditor);
                     if (cachedEditor == null)
-                        return;
+                        return null;
                     
-                    // Create inspector GUI and add to editor container
+                    // Create inspector GUI
                     var inspector = cachedEditor.CreateInspectorGUI();
                     if (inspector != null)
                     {
-                        inspector.name = GetInlineEditorName(property);
                         inspector.Bind(cachedEditor.serializedObject);
-                        editorContainer.Add(inspector);
-                        Debug.Log($"Nested editor is created for {GetInlineEditorName(property)}!");
+                        inspector.name = GetInlineEditorName(property);
+                        foldout.contentContainer.style.marginLeft = 15f;
+                        return inspector;
                     }
-                    else
+                    
+                    // Create IMGUI container if no UIToolkit implementation
+                    inspector = CreateInspectorIMGUIContainer(cachedEditor);
+                    if (inspector != null)
                     {
-                        Debug.Log($"{GetInlineEditorName(property)} doesn't have CreateInspectorGUI() implementation.");
-                        // TODO: Implement IMGUIContainer and call editor.OnInspectorGUI();
+                        inspector.name = GetInlineEditorName(property);
+                        foldout.contentContainer.style.marginLeft = 0f;
+                        return inspector;
                     }
-                });
+                    
+                    return null;
+                }
             });
             
             return propertyField;
@@ -223,6 +193,47 @@ namespace AstrotypeInspector.Editor
             
             return $"{propertyName}:{objectName} ({typeDisplayName})";
         }
+        
+        private static IMGUIContainer CreateInspectorIMGUIContainer(Editor cachedEditor)
+        {
+            return new IMGUIContainer(() =>
+            {
+                // Enables auto-adjusting label width and better foldouts.
+                bool hierarchyMode = EditorGUIUtility.hierarchyMode;
+                EditorGUIUtility.hierarchyMode = true;
+                
+                // Wrap input fields for Vector2, Vector3, etc. when current inspector window width reaches below threshold.
+                bool wideMode = EditorGUIUtility.wideMode; // threshold = 330
+                EditorGUIUtility.wideMode = EditorGUIUtility.currentViewWidth > 330;
+                
+                // Change label width
+                float labelWidth = EditorGUIUtility.labelWidth;
+                EditorGUIUtility.labelWidth = labelWidth - 15f;;
+                
+                // Start padding
+                EditorGUILayout.BeginVertical();
+                GUILayout.Space(0); // top padding = 4
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Space(18); // left padding = 18
+                EditorGUILayout.BeginVertical();
+                
+                // Draw inspector
+                cachedEditor.OnInspectorGUI();
+                
+                // End padding
+                EditorGUILayout.EndVertical();
+                GUILayout.Space(0); // right padding = 4
+                EditorGUILayout.EndHorizontal();
+                GUILayout.Space(0); // bottom padding = 2
+                EditorGUILayout.EndVertical();
+                
+                // Restore modes
+                EditorGUIUtility.hierarchyMode = hierarchyMode;
+                EditorGUIUtility.wideMode = wideMode;
+                EditorGUIUtility.labelWidth = labelWidth;
+            });
+        }
+        
         
     }
 }
