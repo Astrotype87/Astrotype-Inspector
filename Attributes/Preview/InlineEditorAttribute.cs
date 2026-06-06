@@ -25,10 +25,19 @@ namespace AstrotypeInspector.Editor
     [CustomPropertyDrawer(typeof(InlineEditorAttribute))]
     public class InlineEditorDrawer: PropertyDrawer
     {
+        private const string InvalidTypeMessage = "Use InlineEditor with object reference types.";
+        
         private Editor editor = null;
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            // Display error message if property is not object reference
+            if (property.propertyType != SerializedPropertyType.ObjectReference)
+            {
+                EditorGUI.LabelField(position, label.text, InvalidTypeMessage);
+                return;
+            }
+            
             // Draw the property field (object reference)
             position.height = EditorGUI.GetPropertyHeight(property, label, true);
             EditorGUI.PropertyField(position, property, label, true);
@@ -68,7 +77,10 @@ namespace AstrotypeInspector.Editor
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return EditorGUI.GetPropertyHeight(property, label, true);;
+            if (property.propertyType != SerializedPropertyType.ObjectReference)
+                return EditorGUIUtility.singleLineHeight;
+            
+            return EditorGUI.GetPropertyHeight(property, label, true);
         }
     }
 }
