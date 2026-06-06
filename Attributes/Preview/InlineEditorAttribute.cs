@@ -9,9 +9,7 @@ namespace AstrotypeInspector
     [AttributeUsage(AttributeTargets.Field)]
     public sealed class InlineEditorAttribute : PropertyAttribute
     {
-        public readonly bool UseMargin;
         public InlineEditorAttribute() { }
-        public InlineEditorAttribute(bool useMargin) => UseMargin = true;
     }
 }
 
@@ -53,8 +51,12 @@ namespace AstrotypeInspector.Editor
             if (editor == null)
                 return;
             
-            // Draw editor
+            // Create box style
             GUIStyle boxStyle = new(GUI.skin.box);
+            boxStyle.margin = new(3, 3, 3, 3);
+            boxStyle.padding = new(3, 3, 3, 3);
+            
+            // Draw editor
             EditorGUILayout.BeginVertical(boxStyle);
             EditorGUI.indentLevel++;
             
@@ -63,83 +65,11 @@ namespace AstrotypeInspector.Editor
             EditorGUI.indentLevel--;
             EditorGUILayout.EndVertical();
         }
-
+        
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            float totalHeight = EditorGUI.GetPropertyHeight(property, label, true);
-            
-            if (property.isExpanded && property.objectReferenceValue != null)
-            {
-                if (editor == null || editor.target != property.objectReferenceValue)
-                    Editor.CreateCachedEditor(property.objectReferenceValue, null, ref editor);
-                
-                if (editor != null)
-                {
-                    // totalHeight += EditorGUIUtility.standardVerticalSpacing + GetEditorHeight(editor);
-                }
-            }
-            
-            return totalHeight;
+            return EditorGUI.GetPropertyHeight(property, label, true);;
         }
-        
-        
-        private float GetEditorHeight(Editor editor)
-        {
-            float height = 0f;
-            SerializedObject serializedEditor = editor.serializedObject;
-            
-            SerializedProperty iterator = serializedEditor.GetIterator();
-            iterator.NextVisible(true); // Skip "m_Script"
-            
-            while (iterator.NextVisible(false))
-            {
-                height += EditorGUI.GetPropertyHeight(iterator, true) + EditorGUIUtility.standardVerticalSpacing;
-            }
-            
-            return height + EditorGUIUtility.standardVerticalSpacing; // Padding for safety
-        }
-        
-        private void BeginMargin(float marginTop, float marginLeft)
-        {
-            EditorGUILayout.BeginVertical();
-            EditorGUILayout.Space(marginTop);
-            
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.Space(marginLeft);
-            
-            EditorGUILayout.BeginVertical();
-        }
-        
-        private void EndMargin(float marginRight, float marginBottom)
-        {
-            EditorGUILayout.EndVertical();
-            
-            EditorGUILayout.Space(marginRight);
-            EditorGUILayout.EndHorizontal();
-            
-            EditorGUILayout.Space(marginBottom);
-            EditorGUILayout.EndVertical();
-        }
-        
-        private void DrawWithMargin(Action draw, float marginTop, float marginLeft, float marginRight, float marginBottom)
-        {
-            EditorGUILayout.BeginVertical();
-            EditorGUILayout.Space(marginTop);
-            
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.Space(marginLeft);
-            
-            EditorGUILayout.BeginVertical();
-            draw();
-            EditorGUILayout.EndVertical();
-            
-            EditorGUILayout.Space(marginRight);
-            EditorGUILayout.EndHorizontal();
-            
-            EditorGUILayout.Space(marginBottom);
-            EditorGUILayout.EndVertical();
-        }
-        
     }
 }
 #endif
