@@ -9,7 +9,9 @@ namespace AstrotypeInspector
     [AttributeUsage(AttributeTargets.Field)]
     public sealed class InlineEditorAttribute : PropertyAttribute
     {
+        public readonly bool UseMargin;
         public InlineEditorAttribute() { }
+        public InlineEditorAttribute(bool useMargin) => UseMargin = true;
     }
 }
 
@@ -25,8 +27,6 @@ namespace AstrotypeInspector.Editor
     [CustomPropertyDrawer(typeof(InlineEditorAttribute))]
     public class InlineEditorDrawer: PropertyDrawer
     {
-        private const float IndentSize = 15f;
-        
         private Editor editor = null;
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -53,41 +53,33 @@ namespace AstrotypeInspector.Editor
             if (editor == null)
                 return;
             
-            EditorGUI.indentLevel++;
+            // Create box style
+            GUIStyle boxStyle = new(GUI.skin.box);
             
-            // Create rect for the inline inspector
-            float boxX = position.x + (EditorGUI.indentLevel - 1) * IndentSize;
-            float boxY = position.y + position.height + EditorGUIUtility.standardVerticalSpacing;
-            Rect boxRect = new(boxX, boxY, position.width, GetEditorHeight(editor));
-            GUI.Box(boxRect, GUIContent.none); // Optional background box
+            // Draw editor
+            var attribute = (InlineEditorAttribute)this.attribute; 
             
-            // Begin a child GUI area to contain the editor GUI
-            Rect groupRect = new(position.x, boxY, position.width, GetEditorHeight(editor));
-            GUI.BeginGroup(groupRect);
-            
-            // Shift content inside box
-            var innerRect = new Rect(0, 0, groupRect.width, groupRect.height);
-            
-            // Draw properties using serialized object
-            SerializedObject serializedEditor = editor.serializedObject;
-            serializedEditor.Update();
-            
-            SerializedProperty iterator = serializedEditor.GetIterator();
-            iterator.NextVisible(true); // Skip "m_Script"
-            
-            float y = EditorGUIUtility.standardVerticalSpacing;
-            while (iterator.NextVisible(false))
+            if (attribute.UseMargin)
             {
-                float propHeight = EditorGUI.GetPropertyHeight(iterator, true);
-                Rect propRect = new(0, y, innerRect.width, propHeight);
-                EditorGUI.PropertyField(propRect, iterator, true);
-                y += propHeight + EditorGUIUtility.standardVerticalSpacing;
+                EditorGUILayout.BeginVertical(boxStyle);
+                EditorGUILayout.Space(-2, false); // top margin
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.Space(-3, false); // left margin
+                EditorGUILayout.BeginVertical();
             }
             
-            serializedEditor.ApplyModifiedProperties();
-            
-            GUI.EndGroup();
+            EditorGUI.indentLevel++;
+            editor.OnInspectorGUI();
             EditorGUI.indentLevel--;
+            
+            if (attribute.UseMargin)
+            {
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space(-3, false); // right margin
+                EditorGUILayout.EndHorizontal();
+                // EditorGUILayout.Space(2, false); // bottom margin
+                EditorGUILayout.EndVertical();
+            }
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -101,7 +93,7 @@ namespace AstrotypeInspector.Editor
                 
                 if (editor != null)
                 {
-                    totalHeight += EditorGUIUtility.standardVerticalSpacing + GetEditorHeight(editor);
+                    // totalHeight += EditorGUIUtility.standardVerticalSpacing + GetEditorHeight(editor);
                 }
             }
             
@@ -124,6 +116,48 @@ namespace AstrotypeInspector.Editor
             
             return height + EditorGUIUtility.standardVerticalSpacing; // Padding for safety
         }
+        
+        private void BeginMargin(float marginTop, float marginLeft)
+        {
+            EditorGUILayout.BeginVertical();
+            EditorGUILayout.Space(marginTop);
+            
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.Space(marginLeft);
+            
+            EditorGUILayout.BeginVertical();
+        }
+        
+        private void EndMargin(float marginRight, float marginBottom)
+        {
+            EditorGUILayout.EndVertical();
+            
+            EditorGUILayout.Space(marginRight);
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.Space(marginBottom);
+            EditorGUILayout.EndVertical();
+        }
+        
+        private void DrawWithMargin(Action draw, float marginTop, float marginLeft, float marginRight, float marginBottom)
+        {
+            EditorGUILayout.BeginVertical();
+            EditorGUILayout.Space(marginTop);
+            
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.Space(marginLeft);
+            
+            EditorGUILayout.BeginVertical();
+            draw();
+            EditorGUILayout.EndVertical();
+            
+            EditorGUILayout.Space(marginRight);
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.Space(marginBottom);
+            EditorGUILayout.EndVertical();
+        }
+        
     }
 }
 #endif
