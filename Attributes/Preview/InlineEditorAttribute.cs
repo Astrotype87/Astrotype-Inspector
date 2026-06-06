@@ -20,6 +20,7 @@ namespace AstrotypeInspector.Editor
     using UnityEditor;
     using UnityEngine.UIElements;
     using UnityEditor.UIElements;
+    using Unity.Properties;
     using Editor = UnityEditor.Editor;
     
     [CustomPropertyDrawer(typeof(InlineEditorAttribute))]
@@ -107,6 +108,7 @@ namespace AstrotypeInspector.Editor
                 var foldout = new Foldout();
                 foldout.name = "inline-editor-foldout";
                 foldout.value = property.isExpanded;
+                foldout.style.display = property.objectReferenceValue == null ? DisplayStyle.None : DisplayStyle.Flex;
                 parent.Add(foldout);
                 
                 // Create editor container
@@ -120,6 +122,7 @@ namespace AstrotypeInspector.Editor
                 // When foldout is expanded or collapsed
                 foldout.RegisterValueChangedCallback(e =>
                 {
+                    Debug.Log($"Foldout isExpanded = {foldout.value}");
                     // Update property isExpanded state
                     property.isExpanded = foldout.value;
                     
@@ -128,49 +131,97 @@ namespace AstrotypeInspector.Editor
                     // When foldout is opened and editorContainer is empty, create nested editor
                     if (foldout.value && editorContainer.childCount == 0)
                     {
-                        // If object reference is null, hide foldout and abort
-                        Object objectReference = property.objectReferenceValue;
-                        foldout.style.display = objectReference == null ? DisplayStyle.None : DisplayStyle.Flex;
-                        if (objectReference == null)
+                        Debug.Log($"Foldout is open, and editor container is empty. Attempting to create nested editor.");
+                        
+                        // Abort if object reference is null
+                        if (property.objectReferenceValue == null)
+                        {
+                            Debug.Log($"The object reference is empty. Aborting creation");
                             return;
+                        }
                         
                         // Create cached editor, abort if null
-                        Editor.CreateCachedEditor(objectReference, null, ref cachedEditor);
+                        Editor.CreateCachedEditor(property.objectReferenceValue, null, ref cachedEditor);
                         if (cachedEditor == null)
                             return;
                         
                         // Create inspector GUI and add to editor container
                         var inspector = cachedEditor.CreateInspectorGUI();
-                        editorContainer.Add(inspector);
+                        if (inspector != null)
+                        {
+                            inspector.name = GetInlineEditorName(property);
+                            inspector.Bind(cachedEditor.serializedObject);
+                            editorContainer.Add(inspector);
+                            Debug.Log($"Nested editor is created for {GetInlineEditorName(property)}!");
+                        }
+                        else
+                        {
+                            Debug.Log($"{GetInlineEditorName(property)} doesn't have CreateInspectorGUI() implementation.");
+                            // TODO: Implement IMGUIContainer and call editor.OnInspectorGUI();
+                        }
                     }
                 });
                 
                 // Refresh nested editor if object field value is changed
-                propertyField.RegisterValueChangeCallback(e =>
+                var objectField = parent.Q<ObjectField>();
+                objectField.RegisterValueChangedCallback(e =>
                 {
+                    Debug.Log($"Object reference value is changed! Attempting to create nested editor.");
+                    
+                    // Hide foldout if object reference is null
+                    foldout.style.display = property.objectReferenceValue == null ? DisplayStyle.None : DisplayStyle.Flex;
+                    if (!foldout.value)
+                    {
+                        Debug.Log($"The foldout is closed. Aborting creation.");
+                        return;
+                    }
+                    
                     // Clear container and destroy cached editor
                     editorContainer.Clear();
-                    Object.DestroyImmediate(cachedEditor);
+                    if (cachedEditor)
+                        Object.DestroyImmediate(cachedEditor);
                     cachedEditor = null;
                     
-                    // If object reference is null, hide foldout and abort
-                    Object objectReference = property.objectReferenceValue;
-                    foldout.style.display = objectReference == null ? DisplayStyle.None : DisplayStyle.Flex;
-                    if (objectReference == null)
+                    // Abort if object reference is null
+                    if (property.objectReferenceValue == null)
+                    {
+                        Debug.Log($"The object reference is empty. Aborting creation.");
                         return;
+                    }
                     
                     // Create cached editor, abort if null
-                    Editor.CreateCachedEditor(objectReference, null, ref cachedEditor);
+                    Editor.CreateCachedEditor(property.objectReferenceValue, null, ref cachedEditor);
                     if (cachedEditor == null)
                         return;
                     
                     // Create inspector GUI and add to editor container
                     var inspector = cachedEditor.CreateInspectorGUI();
-                    editorContainer.Add(inspector);
+                    if (inspector != null)
+                    {
+                        inspector.name = GetInlineEditorName(property);
+                        inspector.Bind(cachedEditor.serializedObject);
+                        editorContainer.Add(inspector);
+                        Debug.Log($"Nested editor is created for {GetInlineEditorName(property)}!");
+                    }
+                    else
+                    {
+                        Debug.Log($"{GetInlineEditorName(property)} doesn't have CreateInspectorGUI() implementation.");
+                        // TODO: Implement IMGUIContainer and call editor.OnInspectorGUI();
+                    }
                 });
             });
             
             return propertyField;
+        }
+        
+        
+        private string GetInlineEditorName(SerializedProperty property)
+        {
+            string propertyName = property.displayName;
+            string objectName = property.objectReferenceValue.name;
+            string typeDisplayName = TypeUtility.GetTypeDisplayName(property.objectReferenceValue.GetType());
+            
+            return $"{propertyName}:{objectName} ({typeDisplayName})";
         }
         
     }
