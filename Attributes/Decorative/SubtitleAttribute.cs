@@ -86,7 +86,7 @@ namespace AstrotypeInspector.Editor
             subtitleStyle.contentOffset = new(sideOffset, subtitleStyle.contentOffset.y);
             
             // Draw subtitle label
-            Rect subtitleRect = position;
+            Rect subtitleRect = position.GetIndentedRect();
             subtitleRect.y += offsetIfBottom;
             subtitleRect.height = subtitleHeight;
             if (iconTexture != null) // Leave space for icon
@@ -106,7 +106,7 @@ namespace AstrotypeInspector.Editor
                 iconStyle.contentOffset = new(sideOffset, iconMarginTop); // recenter after reducing height
             
                 // Draw icon image
-                Rect iconRect = position;
+                Rect iconRect = position.GetIndentedRect();
                 iconRect.y += offsetIfBottom;
                 iconRect.height = subtitleHeight;
                 GUI.Label(iconRect, new GUIContent(iconTexture), iconStyle);
