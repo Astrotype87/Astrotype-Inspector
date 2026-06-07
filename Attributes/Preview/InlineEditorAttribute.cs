@@ -137,16 +137,16 @@ namespace AstrotypeInspector.Editor
                 var objectField = parent.Q<ObjectField>();
                 objectField.RegisterValueChangedCallback(e =>
                 {
-                    // Hide foldout if object reference is null
-                    foldout.style.display = property.objectReferenceValue == null ? DisplayStyle.None : DisplayStyle.Flex;
-                    if (!foldout.value)
-                        return;
-                    
                     // Clear container and destroy cached editor
                     editorContainer.Clear();
                     if (cachedEditor)
                         Object.DestroyImmediate(cachedEditor);
                     cachedEditor = null;
+                    
+                    // Hide foldout if object reference is null
+                    foldout.style.display = property.objectReferenceValue == null ? DisplayStyle.None : DisplayStyle.Flex;
+                    if (!foldout.value)
+                        return;
                     
                     // Create nested inspector and add to container
                     editorContainer.Add(CreateNestedInspector());
