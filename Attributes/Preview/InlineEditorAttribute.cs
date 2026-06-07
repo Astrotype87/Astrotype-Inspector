@@ -169,12 +169,11 @@ namespace AstrotypeInspector.Editor
                     {
                         inspector.Bind(cachedEditor.serializedObject);
                         inspector.name = GetInlineEditorName(property);
-                        foldout.contentContainer.style.marginLeft = 15f;
                         return inspector;
                     }
                     
                     // Create IMGUI container if no UIToolkit implementation
-                    inspector = CreateInspectorIMGUIContainer(cachedEditor);
+                    inspector = CreateInspectorIMGUIContainer(cachedEditor, property.depth);
                     if (inspector != null)
                     {
                         inspector.name = GetInlineEditorName(property);
@@ -182,7 +181,6 @@ namespace AstrotypeInspector.Editor
                         inspector.style.marginBottom = 1;
                         inspector.style.marginLeft = 3;
                         inspector.style.marginRight = -2;
-                        foldout.contentContainer.style.marginLeft = 0f;
                         return inspector;
                     }
                     
@@ -203,7 +201,7 @@ namespace AstrotypeInspector.Editor
             return $"{propertyName}:{objectName} ({typeDisplayName})";
         }
         
-        private static IMGUIContainer CreateInspectorIMGUIContainer(Editor cachedEditor)
+        private static IMGUIContainer CreateInspectorIMGUIContainer(Editor cachedEditor, int propertyDepth)
         {
             return new IMGUIContainer(() =>
             {
@@ -215,14 +213,17 @@ namespace AstrotypeInspector.Editor
                 bool wideMode = EditorGUIUtility.wideMode; // threshold = 330
                 EditorGUIUtility.wideMode = EditorGUIUtility.currentViewWidth > 330;
                 
+                // Reduce label width by indent
+                float labelWidth = EditorGUIUtility.labelWidth;
+                EditorGUIUtility.labelWidth = labelWidth - (15f * (propertyDepth + 1));
+                
                 // Draw inspector
-                EditorGUI.indentLevel++;
                 cachedEditor.OnInspectorGUI();
-                EditorGUI.indentLevel--;
                 
                 // Restore modes
                 EditorGUIUtility.hierarchyMode = hierarchyMode;
                 EditorGUIUtility.wideMode = wideMode;
+                EditorGUIUtility.labelWidth = labelWidth;
             });
         }
         
