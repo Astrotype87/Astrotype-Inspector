@@ -19,8 +19,10 @@ namespace AstrotypeInspector
         public static object GetMemberValue(object targetObject, string memberPath)
         {
             MemberInfo[] memberInfoPath = GetMemberInfoPath(targetObject.GetType(), memberPath);
-            object currentObject = targetObject;
+            if (memberInfoPath == null)
+                return null;
             
+            object currentObject = targetObject;
             foreach (var memberInfo in memberInfoPath)
             {
                 if (currentObject == null) return null;
