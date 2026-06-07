@@ -180,6 +180,8 @@ namespace AstrotypeInspector.Editor
                         inspector.name = GetInlineEditorName(property);
                         inspector.style.marginTop = 1;
                         inspector.style.marginBottom = 1;
+                        inspector.style.marginLeft = 3;
+                        inspector.style.marginRight = -2;
                         foldout.contentContainer.style.marginLeft = 0f;
                         return inspector;
                     }
@@ -213,34 +215,16 @@ namespace AstrotypeInspector.Editor
                 bool wideMode = EditorGUIUtility.wideMode; // threshold = 330
                 EditorGUIUtility.wideMode = EditorGUIUtility.currentViewWidth > 330;
                 
-                // Change label width
-                float labelWidth = EditorGUIUtility.labelWidth;
-                EditorGUIUtility.labelWidth = labelWidth - 15f;;
-                
-                // Start padding
-                EditorGUILayout.BeginVertical();
-                GUILayout.Space(0); // top padding = 4
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.Space(18); // left padding = 18
-                EditorGUILayout.BeginVertical();
-                
                 // Draw inspector
+                EditorGUI.indentLevel++;
                 cachedEditor.OnInspectorGUI();
-                
-                // End padding
-                EditorGUILayout.EndVertical();
-                GUILayout.Space(0); // right padding = 4
-                EditorGUILayout.EndHorizontal();
-                GUILayout.Space(0); // bottom padding = 2
-                EditorGUILayout.EndVertical();
+                EditorGUI.indentLevel--;
                 
                 // Restore modes
                 EditorGUIUtility.hierarchyMode = hierarchyMode;
                 EditorGUIUtility.wideMode = wideMode;
-                EditorGUIUtility.labelWidth = labelWidth;
             });
         }
-        
         
     }
 }
