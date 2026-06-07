@@ -86,7 +86,7 @@ namespace AstrotypeInspector.Editor
                 cachedPositionWidth = position.width;
             
             // Draw paragraph label
-            Rect paragraphRect = position;
+            Rect paragraphRect = position.GetIndentedRect();
             paragraphRect.y += offsetIfBottom;
             paragraphRect.height = paragraphHeight;
             GUI.Label(paragraphRect, paragraphContent, paragraphStyle);
