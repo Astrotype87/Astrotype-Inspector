@@ -178,6 +178,8 @@ namespace AstrotypeInspector.Editor
                     if (inspector != null)
                     {
                         inspector.name = GetInlineEditorName(property);
+                        inspector.style.marginTop = 1;
+                        inspector.style.marginBottom = 1;
                         foldout.contentContainer.style.marginLeft = 0f;
                         return inspector;
                     }
