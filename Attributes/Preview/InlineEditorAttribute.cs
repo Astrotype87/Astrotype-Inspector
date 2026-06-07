@@ -111,6 +111,11 @@ namespace AstrotypeInspector.Editor
                 foldout.style.display = property.objectReferenceValue == null ? DisplayStyle.None : DisplayStyle.Flex;
                 parent.Add(foldout);
                 
+                // Move foldout toggle to the left of object field
+                var toggle = foldout.Q<Toggle>(className: Foldout.toggleUssClassName);
+                toggle.style.position = Position.Absolute;
+                toggle.style.translate = new Vector3(0, -18, 0);
+                
                 // Create editor container
                 var editorContainer = new VisualElement();
                 editorContainer.name =  "inline-editor-container";
