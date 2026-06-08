@@ -20,7 +20,6 @@ namespace AstrotypeInspector.Editor
     using UnityEditor;
     using UnityEngine.UIElements;
     using UnityEditor.UIElements;
-    using Unity.Properties;
     using Editor = UnityEditor.Editor;
     
     [CustomPropertyDrawer(typeof(InlineEditorAttribute))]
@@ -30,6 +29,7 @@ namespace AstrotypeInspector.Editor
         private const string InvalidTypeMessage = "Use InlineEditor with object reference types.";
         
         private Editor cachedEditor;
+        
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -124,19 +124,12 @@ namespace AstrotypeInspector.Editor
                 // Add dark background and margin
                 var container = foldout.contentContainer;
                 container.style.backgroundColor = new Color(0, 0, 0, 0.08f);
+                container.style.paddingBottom = 2;
                 
                 container.style.marginTop = 2;
-                container.style.marginLeft = 3; // (0 + 3)
+                container.style.marginLeft = 3;
                 container.style.marginRight = -2;
                 container.style.marginBottom = 2;
-                
-                container.style.paddingTop = 3 - 1;
-                container.style.paddingLeft = 15; // (15 - 3) + 3
-                container.style.paddingRight = 5; // (2) + 3
-                container.style.paddingBottom = 3 - 1;
-                
-                // Local variable for cached editor
-                Editor cachedEditor = null;
                 
                 
                 // When foldout is expanded or collapsed
@@ -152,12 +145,6 @@ namespace AstrotypeInspector.Editor
                 objectField.RegisterValueChangedCallback(e =>
                 {
                     foldout.Clear();
-                    if (cachedEditor)
-                    {
-                        Object.DestroyImmediate(cachedEditor);
-                        cachedEditor = null;
-                    }
-                    
                     foldout.Add(CreateNestedInspector());
                 });
                 
@@ -174,30 +161,10 @@ namespace AstrotypeInspector.Editor
                     if (!foldout.value || objectReference == null || isRecursive)
                         return null;
                     
-                    
-                    // Create cached editor, abort if null
-                    Editor.CreateCachedEditor(property.objectReferenceValue, null, ref cachedEditor);
-                    if (cachedEditor == null) return null;
-                    
-                    // Create UIToolkit inspector GUI
-                    var inspector = cachedEditor.CreateInspectorGUI();
+                    // Create new inspector element
+                    var inspector = new InspectorElement(objectReference);
                     if (inspector != null)
-                    {
-                        inspector.name = GetInlineEditorName(property);
-                        inspector.Bind(cachedEditor.serializedObject);
-                        return inspector;
-                    }
-                    
-                    // Create IMGUI container if no UIToolkit implementation
-                    inspector = CreateInspectorIMGUIContainer(cachedEditor, property.depth);
-                    if (inspector != null)
-                    {
-                        inspector.name = GetInlineEditorName(property);
-                        inspector.style.marginTop = 1;
-                        inspector.style.marginBottom = 1;
-                        inspector.style.marginLeft = 3;
-                        inspector.style.marginRight = -2;
-                    }
+                        inspector.style.marginRight = -1;
                     return inspector;
                 }
             });
@@ -206,22 +173,13 @@ namespace AstrotypeInspector.Editor
         }
         
         
-        private static string GetInlineEditorName(SerializedProperty property)
-        {
-            string propertyName = property.displayName;
-            string objectName = property.objectReferenceValue.name;
-            string typeDisplayName = TypeUtility.GetTypeDisplayName(property.objectReferenceValue.GetType());
-            
-            return $"{propertyName}:{objectName} ({typeDisplayName})";
-        }
-        
         private static bool IsRecursiveInlineEditor(VisualElement element, Object objectReference)
         {
             // Traverse parent by parent
             for (var current = element.parent; current != null; current = current.parent)
             {
                 // Stop search when you reach the root component
-                if (current is InspectorElement)
+                if (current.ClassListContains("unity-inspector-editors-list"))
                     break;
                 
                 // Check for possible recursion
@@ -236,32 +194,6 @@ namespace AstrotypeInspector.Editor
                 }
             }
             return false;
-        }
-        
-        private static IMGUIContainer CreateInspectorIMGUIContainer(Editor cachedEditor, int propertyDepth)
-        {
-            return new IMGUIContainer(() =>
-            {
-                // Enables auto-adjusting label width and better foldouts.
-                bool hierarchyMode = EditorGUIUtility.hierarchyMode;
-                EditorGUIUtility.hierarchyMode = true;
-                
-                // Wrap input fields for Vector2, Vector3, etc. when current inspector window width reaches below threshold.
-                bool wideMode = EditorGUIUtility.wideMode; // threshold = 330
-                EditorGUIUtility.wideMode = EditorGUIUtility.currentViewWidth > 330;
-                
-                // Reduce label width by indent
-                float labelWidth = EditorGUIUtility.labelWidth;
-                EditorGUIUtility.labelWidth = labelWidth - (15f * (propertyDepth + 1));
-                
-                // Draw inspector
-                cachedEditor.OnInspectorGUI();
-                
-                // Restore modes
-                EditorGUIUtility.hierarchyMode = hierarchyMode;
-                EditorGUIUtility.wideMode = wideMode;
-                EditorGUIUtility.labelWidth = labelWidth;
-            });
         }
         
     }
