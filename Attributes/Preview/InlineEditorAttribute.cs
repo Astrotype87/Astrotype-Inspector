@@ -76,11 +76,15 @@ namespace AstrotypeInspector.Editor
             boxStyle.padding = new(3, 3, 3, 3);
             
             // Draw editor
+            float labelWidth = EditorGUIUtility.labelWidth;
+            
             EditorGUILayout.BeginVertical(boxStyle);
             EditorGUI.indentLevel++;
+            EditorGUIUtility.labelWidth -= boxStyle.margin.left;
             
             cachedEditor.OnInspectorGUI();
             
+            EditorGUIUtility.labelWidth = labelWidth;
             EditorGUI.indentLevel--;
             EditorGUILayout.EndVertical();
         }
