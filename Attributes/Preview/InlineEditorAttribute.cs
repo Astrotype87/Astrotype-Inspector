@@ -16,7 +16,6 @@ namespace AstrotypeInspector
 #if UNITY_EDITOR
 namespace AstrotypeInspector.Editor
 {
-    using System.Collections.Generic;
     using UnityEngine;
     using UnityEditor;
     using UnityEngine.UIElements;
@@ -147,14 +146,14 @@ namespace AstrotypeInspector.Editor
                 VisualElement CreateNestedInspector()
                 {
                     Object objectReference = property.objectReferenceValue;
-                    bool isEditorRecursive = IsEditorRecursive(foldout, property.objectReferenceValue);
+                    bool isRecursive = IsRecursiveInlineEditor(foldout, property.objectReferenceValue);
                     
                     // Hide foldout if object field is empty, or editor is recursive
-                    foldout.style.display = objectReference == null || isEditorRecursive
+                    foldout.style.display = objectReference == null || isRecursive
                         ? DisplayStyle.None : DisplayStyle.Flex;
                     
                     // Cancel creation if foldout is closed, object field is empty, or editor is recursive
-                    if (!foldout.value || objectReference == null || isEditorRecursive)
+                    if (!foldout.value || objectReference == null || isRecursive)
                         return null;
                     
                     
@@ -198,30 +197,26 @@ namespace AstrotypeInspector.Editor
             return $"{propertyName}:{objectName} ({typeDisplayName})";
         }
         
-        private static bool IsEditorRecursive(VisualElement element, Object objectReference)
+        private static bool IsRecursiveInlineEditor(VisualElement element, Object objectReference)
         {
-            Debug.Log($"---------- Check editor recursion for {element.name} ----------");
-            while (true)
+            // Traverse parent by parent
+            for (var current = element.parent; current != null; current = current.parent)
             {
-                element = element.parent;
-                Debug.Log($"Current element: {element.GetType().Name} #{element.name}");
-                if (element is Foldout && element.name == InlineEditorFoldoutName)
-                {
-                    var objectField = element.parent.Q<ObjectField>();
-                    Debug.Log($">>> Object field found: {objectField.value}");
-                    if (objectField.value == objectReference)
-                    {
-                        Debug.Log($"Possible recursive nested editor detected!");
-                        return true;
-                    }
-                }
-                else if (element is InspectorElement || element == null)
-                {
-                    Debug.Log($"No recursive nested editor detected.");
+                // Stop search when you reach the root component
+                if (current is InspectorElement)
                     break;
+                
+                // Check for possible recursion
+                if (current is Foldout && current.name == InlineEditorFoldoutName)
+                {
+                    // Assume that the Foldout has ObjectField sibling
+                    var objectField = current.parent?.Q<ObjectField>();
+                    
+                    // Potentially recursive if the same object reference is found at the top of hierarchy
+                    if (objectField?.value == objectReference)
+                        return true;
                 }
             }
-            
             return false;
         }
         
