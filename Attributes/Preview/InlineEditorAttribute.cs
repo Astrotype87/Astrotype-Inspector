@@ -16,6 +16,7 @@ namespace AstrotypeInspector
 #if UNITY_EDITOR
 namespace AstrotypeInspector.Editor
 {
+    using System.Collections.Generic;
     using UnityEngine;
     using UnityEditor;
     using UnityEngine.UIElements;
@@ -29,6 +30,7 @@ namespace AstrotypeInspector.Editor
         private const string InvalidTypeMessage = "Use InlineEditor with object reference types.";
         
         private Editor cachedEditor;
+        private static readonly HashSet<(Object, Object)> targetNestedPairs = new(); 
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -129,7 +131,7 @@ namespace AstrotypeInspector.Editor
                 foldout.RegisterValueChangedCallback(e =>
                 {
                     property.isExpanded = foldout.value;
-                    if (foldout.value && editorContainer.childCount == 0)
+                    if (editorContainer.childCount == 0)
                         editorContainer.Add(CreateNestedInspector());
                 });
                 
@@ -143,19 +145,35 @@ namespace AstrotypeInspector.Editor
                         Object.DestroyImmediate(cachedEditor);
                     cachedEditor = null;
                     
-                    // Hide foldout if object reference is null
-                    foldout.style.display = property.objectReferenceValue == null ? DisplayStyle.None : DisplayStyle.Flex;
-                    if (!foldout.value)
-                        return;
-                    
-                    // Create nested inspector and add to container
+                    // Try create nested inspector
                     editorContainer.Add(CreateNestedInspector());
                 });
                 
                 VisualElement CreateNestedInspector()
                 {
-                    // Abort if object reference is null
-                    if (property.objectReferenceValue == null)
+                    // Create target-nested pair for tracking recursion
+                    Object target = property.serializedObject.targetObject;
+                    Object nested = property.objectReferenceValue;
+                    (Object, Object) targetNestedPair = (target, nested);
+                    
+                    // Reset foldout toggle visibility
+                    foldout.style.display = DisplayStyle.Flex;
+                    
+                    if (property.objectReferenceValue != null) Debug.Log($"New target-nested pair: {PrintTargetNestedPair(target, nested)}");
+                    
+                    // If object reference is null or recursion is possible
+                    if (property.objectReferenceValue == null || targetNestedPairs.Contains(targetNestedPair))
+                    {
+                        if (targetNestedPairs.Contains(targetNestedPair))
+                            Debug.Log($"Recursion detected {PrintTargetNestedPair(target, nested)}! Avoiding nested editor creation.");
+                        
+                        // Hide foldout toggle and do not create nested inspector
+                        foldout.style.display = DisplayStyle.None;
+                        return null;
+                    }
+                    
+                    // If foldout is closed
+                    if (!foldout.value)
                         return null;
                     
                     // Create cached editor, abort if null
@@ -163,28 +181,39 @@ namespace AstrotypeInspector.Editor
                     if (cachedEditor == null)
                         return null;
                     
-                    // Create inspector GUI
+                    // Create UIToolkit inspector GUI
                     var inspector = cachedEditor.CreateInspectorGUI();
-                    if (inspector != null)
-                    {
-                        inspector.Bind(cachedEditor.serializedObject);
-                        inspector.name = GetInlineEditorName(property);
-                        return inspector;
-                    }
+                    inspector?.Bind(cachedEditor.serializedObject);
                     
                     // Create IMGUI container if no UIToolkit implementation
-                    inspector = CreateInspectorIMGUIContainer(cachedEditor, property.depth);
+                    if (inspector == null)
+                    {
+                        inspector = CreateInspectorIMGUIContainer(cachedEditor, property.depth);
+                        if (inspector != null)
+                        {
+                            inspector.style.marginTop = 1;
+                            inspector.style.marginBottom = 1;
+                            inspector.style.marginLeft = 3;
+                            inspector.style.marginRight = -2;
+                        }
+                    }
+                    
+                    // Set inspector name and add target-nested pair to hash set
                     if (inspector != null)
                     {
                         inspector.name = GetInlineEditorName(property);
-                        inspector.style.marginTop = 1;
-                        inspector.style.marginBottom = 1;
-                        inspector.style.marginLeft = 3;
-                        inspector.style.marginRight = -2;
-                        return inspector;
+                        targetNestedPairs.Add(targetNestedPair);
+                        Debug.Log($"Added target-nested pair: {PrintTargetNestedPair(target, nested)} from hash set!");
+                        
+                        // Remove target-nested pair from hash set when inspector is destroyed
+                        inspector.RegisterCallback<DetachFromPanelEvent>(_ =>
+                        {
+                            targetNestedPairs.Remove(targetNestedPair);
+                            Debug.Log($"Removed target-nested pair: {PrintTargetNestedPair(target, nested)} from hash set!");
+                        });
                     }
                     
-                    return null;
+                    return inspector;
                 }
             });
             
@@ -225,6 +254,11 @@ namespace AstrotypeInspector.Editor
                 EditorGUIUtility.wideMode = wideMode;
                 EditorGUIUtility.labelWidth = labelWidth;
             });
+        }
+        
+        private static string PrintTargetNestedPair(Object target, Object nested)
+        {
+            return $"{(target ? target.GetType().Name : "")}:{(target ? target.GetInstanceID() : "")} -> {(nested ? nested.GetType().Name : "")}:{(nested ? nested.GetInstanceID() : "")}";
         }
         
     }
