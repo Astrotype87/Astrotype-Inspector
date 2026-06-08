@@ -117,6 +117,20 @@ namespace AstrotypeInspector.Editor
                 toggle.style.position = Position.Absolute;
                 toggle.style.translate = new Vector3(0, -18, 0);
                 
+                // Add dark background and margin
+                var container = foldout.contentContainer;
+                container.style.backgroundColor = new Color(0, 0, 0, 0.08f);
+                
+                container.style.marginTop = 2;
+                container.style.marginLeft = 3; // (0 + 3)
+                container.style.marginRight = -2;
+                container.style.marginBottom = 2;
+                
+                container.style.paddingTop = 3 - 1;
+                container.style.paddingLeft = 15; // (15 - 3) + 3
+                container.style.paddingRight = 5; // (2) + 3
+                container.style.paddingBottom = 3 - 1;
+                
                 // Local variable for cached editor
                 Editor cachedEditor = null;
                 
