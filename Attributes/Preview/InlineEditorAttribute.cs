@@ -161,10 +161,36 @@ namespace AstrotypeInspector.Editor
                     if (!foldout.value || objectReference == null || isRecursive)
                         return null;
                     
+                    
+                    // Create cached editor, abort if null
+                    Editor.CreateCachedEditor(property.objectReferenceValue, null, ref cachedEditor);
+                    if (cachedEditor == null)
+                        return null;
+                    
                     // Create new inspector element
-                    var inspector = new InspectorElement(objectReference);
-                    if (inspector != null)
-                        inspector.style.marginRight = -1;
+                    var inspector = new InspectorElement(cachedEditor); // WE NOW USE CACHED EDITOR INSTEAD OF OBJECT REFERENCE VALUE
+                    if (inspector == null)
+                        return inspector;
+                    inspector.style.marginRight = -1;
+                    
+                    
+                    // Detect if it uses IMGUI Container
+                    var IMGUIContainer = inspector.Q<IMGUIContainer>();
+                    if (IMGUIContainer == null)
+                        return inspector;
+                    
+                    // Replace IMGUIContainer with your own implementation
+                    inspector.Remove(IMGUIContainer);
+                    inspector.schedule.Execute(_ =>
+                    {
+                        int foldoutDepth = CountFoldoutDepth(inspector);
+                        int nestedEditorDepth = CountNestedEditorDepth(foldout);
+                        float marginLeft = container.style.marginLeft.value.value;
+                        IMGUIContainer = CreateInspectorIMGUIContainer(cachedEditor, foldoutDepth, nestedEditorDepth, marginLeft);
+                        
+                        inspector.Add(IMGUIContainer);
+                    });
+                    
                     return inspector;
                 }
             });
@@ -173,10 +199,10 @@ namespace AstrotypeInspector.Editor
         }
         
         
-        private static bool IsRecursiveInlineEditor(VisualElement element, Object objectReference)
+        private static bool IsRecursiveInlineEditor(Foldout inlineEditorFoldout, Object objectReference)
         {
             // Traverse parent by parent
-            for (var current = element.parent; current != null; current = current.parent)
+            for (var current = inlineEditorFoldout.parent; current != null; current = current.parent)
             {
                 // Stop search when you reach the root component
                 if (current.ClassListContains("unity-inspector-editors-list"))
@@ -194,6 +220,69 @@ namespace AstrotypeInspector.Editor
                 }
             }
             return false;
+        }
+        
+        private static IMGUIContainer CreateInspectorIMGUIContainer(Editor cachedEditor, int foldoutDepth, int editorDepth, float marginLeft)
+        {
+            return new IMGUIContainer(() =>
+            {
+                // Enables auto-adjusting label width and better foldouts.
+                bool hierarchyMode = EditorGUIUtility.hierarchyMode;
+                EditorGUIUtility.hierarchyMode = true;
+                
+                // Wrap input fields for Vector2, Vector3, etc. when current inspector window width reaches below threshold.
+                bool wideMode = EditorGUIUtility.wideMode; // threshold = 330
+                EditorGUIUtility.wideMode = EditorGUIUtility.currentViewWidth > 330;
+                
+                // Reduce label width by foldout depth, nested editor depth, and nested editor margin left
+                float labelWidth = EditorGUIUtility.labelWidth;
+                float foldoutIndentBuildup = 15f * foldoutDepth;
+                float nestedEditorMarginLeftBuildup = marginLeft * (1 + editorDepth);
+                EditorGUIUtility.labelWidth = labelWidth - foldoutIndentBuildup - nestedEditorMarginLeftBuildup;
+                
+                // Draw inspector with default margins
+                EditorGUILayout.BeginVertical(EditorStyles.inspectorDefaultMargins);
+                cachedEditor.OnInspectorGUI();
+                EditorGUILayout.EndVertical();
+                
+                // Restore modes
+                EditorGUIUtility.hierarchyMode = hierarchyMode;
+                EditorGUIUtility.wideMode = wideMode;
+                EditorGUIUtility.labelWidth = labelWidth;
+            });
+        }
+        
+        private static int CountFoldoutDepth(VisualElement fromElement)
+        {
+            int foldoutDepth = 0;
+            for (var current = fromElement; current != null; current = current.parent)
+            {
+                // Stop search when you reach the root component
+                if (current.ClassListContains("unity-inspector-editors-list"))
+                    break;
+                
+                // Check for foldouts
+                if (current is Foldout)
+                    foldoutDepth ++;
+            }
+            return foldoutDepth;
+        }
+        
+        private static int CountNestedEditorDepth(Foldout inlineEditorFoldout)
+        {
+            // Traverse parent by parent
+            int nestedEditorDepth = 0;
+            for (var current = inlineEditorFoldout.parent; current != null; current = current.parent)
+            {
+                // Stop search when you reach the root component
+                if (current.ClassListContains("unity-inspector-editors-list"))
+                    break;
+                
+                // Check for inline editor foldouts
+                if (current is Foldout && current.name == InlineEditorFoldoutName)
+                    nestedEditorDepth ++;
+            }
+            return nestedEditorDepth;
         }
         
     }
