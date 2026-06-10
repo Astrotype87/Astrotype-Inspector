@@ -54,6 +54,9 @@ namespace AstrotypeInspector.Editor
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            if (!IsNumericOrVector(property.propertyType))
+                return EditorGUIUtility.singleLineHeight;
+            
             return EditorGUI.GetPropertyHeight(property, label, true);
         }
         
