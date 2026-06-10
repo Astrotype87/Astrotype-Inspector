@@ -23,7 +23,7 @@ namespace AstrotypeInspector.Editor
     using Editor = UnityEditor.Editor;
     
     [CustomPropertyDrawer(typeof(InlineEditorAttribute))]
-    public class InlineEditorDrawer: PropertyDrawer
+    public class InlineEditorDrawer : PropertyDrawer
     {
         public const string InlineEditorFoldoutName = "inline-editor-foldout";
         private const string InvalidTypeMessage = "Use InlineEditor with object reference types.";
@@ -183,11 +183,8 @@ namespace AstrotypeInspector.Editor
                     inspector.Remove(IMGUIContainer);
                     inspector.schedule.Execute(_ =>
                     {
-                        int foldoutDepth = CountFoldoutDepth(inspector);
-                        int nestedEditorDepth = CountNestedEditorDepth(foldout);
-                        float marginLeft = container.style.marginLeft.value.value;
-                        IMGUIContainer = CreateInspectorIMGUIContainer(cachedEditor, foldoutDepth, nestedEditorDepth, marginLeft);
-                        
+                        float totalMarginLeft = CalculateTotalMarginLeft(inspector);
+                        IMGUIContainer = CreateInspectorIMGUIContainer(cachedEditor, totalMarginLeft);
                         inspector.Add(IMGUIContainer);
                     });
                     
@@ -204,7 +201,7 @@ namespace AstrotypeInspector.Editor
             // Traverse parent by parent
             for (var current = inlineEditorFoldout.parent; current != null; current = current.parent)
             {
-                // Stop search when you reach the root component
+                // Stop search when you reach the root inspector
                 if (current.ClassListContains("unity-inspector-editors-list"))
                     break;
                 
@@ -222,7 +219,7 @@ namespace AstrotypeInspector.Editor
             return false;
         }
         
-        private static IMGUIContainer CreateInspectorIMGUIContainer(Editor cachedEditor, int foldoutDepth, int editorDepth, float marginLeft)
+        private static IMGUIContainer CreateInspectorIMGUIContainer(Editor cachedEditor, float totalMarginLeft)
         {
             return new IMGUIContainer(() =>
             {
@@ -236,9 +233,7 @@ namespace AstrotypeInspector.Editor
                 
                 // Reduce label width by foldout depth, nested editor depth, and nested editor margin left
                 float labelWidth = EditorGUIUtility.labelWidth;
-                float foldoutIndentBuildup = 15f * foldoutDepth;
-                float nestedEditorMarginLeftBuildup = marginLeft * (1 + editorDepth);
-                EditorGUIUtility.labelWidth = labelWidth - foldoutIndentBuildup - nestedEditorMarginLeftBuildup;
+                EditorGUIUtility.labelWidth = labelWidth - totalMarginLeft;
                 
                 // Draw inspector with default margins
                 EditorGUILayout.BeginVertical(EditorStyles.inspectorDefaultMargins);
@@ -252,37 +247,27 @@ namespace AstrotypeInspector.Editor
             });
         }
         
-        private static int CountFoldoutDepth(VisualElement fromElement)
+        private static float CalculateTotalMarginLeft(VisualElement fromElement)
         {
-            int foldoutDepth = 0;
-            for (var current = fromElement; current != null; current = current.parent)
-            {
-                // Stop search when you reach the root component
-                if (current.ClassListContains("unity-inspector-editors-list"))
-                    break;
-                
-                // Check for foldouts
-                if (current is Foldout)
-                    foldoutDepth ++;
-            }
-            return foldoutDepth;
-        }
-        
-        private static int CountNestedEditorDepth(Foldout inlineEditorFoldout)
-        {
+            float totalMarginLeft = 0;
+            float totalBorderLeftWidth = 0;
+            float totalPaddingLeft = 0;
+            
             // Traverse parent by parent
-            int nestedEditorDepth = 0;
-            for (var current = inlineEditorFoldout.parent; current != null; current = current.parent)
+            for (var current = fromElement; current != null; current = current.hierarchy.parent)
             {
-                // Stop search when you reach the root component
+                // Stop search when you reach the root inspector
                 if (current.ClassListContains("unity-inspector-editors-list"))
                     break;
                 
-                // Check for inline editor foldouts
-                if (current is Foldout && current.name == InlineEditorFoldoutName)
-                    nestedEditorDepth ++;
+                // Add margin let, border left width and padding left of the current element
+                totalMarginLeft += current.resolvedStyle.marginLeft;
+                totalBorderLeftWidth += current.resolvedStyle.borderLeftWidth;
+                totalPaddingLeft += current.resolvedStyle.paddingLeft;
             }
-            return nestedEditorDepth;
+            
+            // Return the sum of total margin left, border left width and padding left
+            return totalMarginLeft + totalBorderLeftWidth + totalPaddingLeft;
         }
         
     }
