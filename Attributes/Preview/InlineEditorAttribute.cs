@@ -168,27 +168,26 @@ namespace AstrotypeInspector.Editor
                         return null;
                     
                     // Create new inspector element
-                    var inspector = new InspectorElement(cachedEditor); // WE NOW USE CACHED EDITOR INSTEAD OF OBJECT REFERENCE VALUE
-                    if (inspector == null)
-                        return inspector;
-                    inspector.style.marginRight = -1;
+                    var inspectorElement = new InspectorElement(cachedEditor); // WE NOW USE CACHED EDITOR INSTEAD OF OBJECT REFERENCE VALUE
+                    if (inspectorElement == null)
+                        return inspectorElement;
+                    inspectorElement.style.marginRight = -1;
                     
                     
                     // Detect if it uses IMGUI Container
-                    var IMGUIContainer = inspector.Q<IMGUIContainer>();
+                    var IMGUIContainer = inspectorElement.Q<IMGUIContainer>();
                     if (IMGUIContainer == null)
-                        return inspector;
+                        return inspectorElement;
                     
                     // Replace IMGUIContainer with your own implementation
-                    inspector.Remove(IMGUIContainer);
-                    inspector.schedule.Execute(_ =>
+                    inspectorElement.Remove(IMGUIContainer);
+                    inspectorElement.schedule.Execute(_ =>
                     {
-                        float totalMarginLeft = CalculateTotalMarginLeft(inspector);
-                        IMGUIContainer = CreateInspectorIMGUIContainer(cachedEditor, totalMarginLeft);
-                        inspector.Add(IMGUIContainer);
+                        IMGUIContainer = CreateInspectorIMGUIContainer(cachedEditor, inspectorElement);
+                        inspectorElement.Add(IMGUIContainer);
                     });
                     
-                    return inspector;
+                    return inspectorElement;
                 }
             });
             
@@ -219,7 +218,7 @@ namespace AstrotypeInspector.Editor
             return false;
         }
         
-        private static IMGUIContainer CreateInspectorIMGUIContainer(Editor cachedEditor, float totalMarginLeft)
+        private static IMGUIContainer CreateInspectorIMGUIContainer(Editor cachedEditor, VisualElement inspectorElement)
         {
             return new IMGUIContainer(() =>
             {
@@ -231,9 +230,10 @@ namespace AstrotypeInspector.Editor
                 bool wideMode = EditorGUIUtility.wideMode; // threshold = 330
                 EditorGUIUtility.wideMode = EditorGUIUtility.currentViewWidth > 330;
                 
-                // Reduce label width by foldout depth, nested editor depth, and nested editor margin left
+                // Reduce label width by inspector element x position
                 float labelWidth = EditorGUIUtility.labelWidth;
-                EditorGUIUtility.labelWidth = labelWidth - totalMarginLeft;
+                float positionX = inspectorElement.worldBound.x - 1f;
+                EditorGUIUtility.labelWidth = labelWidth - positionX;
                 
                 // Draw inspector with default margins
                 EditorGUILayout.BeginVertical(EditorStyles.inspectorDefaultMargins);
@@ -245,29 +245,6 @@ namespace AstrotypeInspector.Editor
                 EditorGUIUtility.wideMode = wideMode;
                 EditorGUIUtility.labelWidth = labelWidth;
             });
-        }
-        
-        private static float CalculateTotalMarginLeft(VisualElement fromElement)
-        {
-            float totalMarginLeft = 0;
-            float totalBorderLeftWidth = 0;
-            float totalPaddingLeft = 0;
-            
-            // Traverse parent by parent
-            for (var current = fromElement; current != null; current = current.hierarchy.parent)
-            {
-                // Stop search when you reach the root inspector
-                if (current.ClassListContains("unity-inspector-editors-list"))
-                    break;
-                
-                // Add margin let, border left width and padding left of the current element
-                totalMarginLeft += current.resolvedStyle.marginLeft;
-                totalBorderLeftWidth += current.resolvedStyle.borderLeftWidth;
-                totalPaddingLeft += current.resolvedStyle.paddingLeft;
-            }
-            
-            // Return the sum of total margin left, border left width and padding left
-            return totalMarginLeft + totalBorderLeftWidth + totalPaddingLeft;
         }
         
     }
