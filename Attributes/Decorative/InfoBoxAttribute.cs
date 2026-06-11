@@ -77,7 +77,7 @@ namespace AstrotypeInspector.Editor
             // Draw help box
             if (showHelpBox)
             {
-                Rect helpBoxRect = position.GetIndentedRect();
+                Rect helpBoxRect = EditorGUI.IndentedRect(position);
                 helpBoxRect.y += offsetIfBottom;
                 helpBoxRect.height = helpBoxHeight;
                 EditorGUI.HelpBox(helpBoxRect, attribute.Message, messageType);

@@ -122,7 +122,7 @@ namespace AstrotypeInspector.Editor
             titleStyle.alignment = GetMiddleAnchorByAlign(attribute.Align); // EditorStyles.boldLabel style uses Middle for text anchor
             
             // Draw title label
-            Rect titleRect = position.GetIndentedRect();
+            Rect titleRect = EditorGUI.IndentedRect(position);
             
             titleRect.y += titleMarginTop + offsetIfBottom;
             titleRect.height = titleHeight;
@@ -143,7 +143,7 @@ namespace AstrotypeInspector.Editor
                 iconStyle.contentOffset = new(iconStyle.contentOffset.x, iconMarginTop); // recenter after reducing height
                 
                 // Draw icon image
-                Rect iconRect = position.GetIndentedRect();
+                Rect iconRect = EditorGUI.IndentedRect(position);
                 iconRect.y += titleMarginTop + offsetIfBottom;
                 iconRect.height = titleHeight;
                 GUI.Label(iconRect, new GUIContent(iconTexture), iconStyle);
@@ -166,7 +166,7 @@ namespace AstrotypeInspector.Editor
                 subtitleStyle.contentOffset = new(sideOffset, subtitleStyle.contentOffset.y);
                 
                 // Draw subtitle label
-                Rect subtitleRect = position.GetIndentedRect();
+                Rect subtitleRect = EditorGUI.IndentedRect(position);
                 subtitleRect.y += titleMarginTop + titleHeight + offsetIfBottom;
                 subtitleRect.height = subtitleHeight;
                 GUI.Label(subtitleRect, new GUIContent(attribute.Subtitle), subtitleStyle);
@@ -180,7 +180,7 @@ namespace AstrotypeInspector.Editor
                 separatorColor.a *= 0.15f;
                 
                 // Draw separator line
-                Rect separatorRect = position.GetIndentedRect();
+                Rect separatorRect = EditorGUI.IndentedRect(position);
                 separatorRect.y += titleMarginTop + titleHeight + separatorMarginTop + offsetIfBottom;
                 if (hasSubtitle)
                     separatorRect.y += subtitleHeight + subtitleMarginBottom;

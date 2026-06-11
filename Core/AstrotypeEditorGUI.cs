@@ -13,20 +13,6 @@ namespace AstrotypeInspector.Editor
     {
         // IMGUI HELPER FUNCTIONS
         
-        /// <summary>
-        /// Apply current editor indent level to rect by adjusting x and width.<br/>
-        /// </summary>
-        /// <param name="rect">The rect to apply current EditorGUI.indentLevel to.</param>
-        /// <returns></returns>
-        public static Rect GetIndentedRect(this Rect rect)
-        {
-            float indentOffset = EditorGUI.indentLevel * 15f;
-            rect.x += indentOffset;
-            rect.width -= indentOffset;
-            return rect;
-        }
-        
-        
         // UI TOOLKIT HELPER FUNCTIONS
         
         /// <summary>

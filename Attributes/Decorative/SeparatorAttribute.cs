@@ -61,7 +61,7 @@ namespace AstrotypeInspector.Editor
             separatorColor.a *= 0.15f;
             
             // Draw separator line
-            Rect separatorRect = position.GetIndentedRect();
+            Rect separatorRect = EditorGUI.IndentedRect(position);
             separatorRect.y += separatorMarginTop + offsetIfBottom;
             separatorRect.height = separatorHeight;
             EditorGUI.DrawRect(separatorRect, separatorColor);

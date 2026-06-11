@@ -86,7 +86,7 @@ namespace AstrotypeInspector.Editor
                 cachedPositionWidth = position.width;
             
             // Draw text label
-            Rect textRect = position.GetIndentedRect();
+            Rect textRect = EditorGUI.IndentedRect(position);
             textRect.y += offsetIfBottom;
             textRect.height = textHeight;
             GUI.Label(textRect, textContent, textStyle);
