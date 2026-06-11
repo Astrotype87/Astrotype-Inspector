@@ -168,7 +168,7 @@ namespace AstrotypeInspector.Editor
                         return null;
                     
                     // Create new inspector element
-                    var inspectorElement = new InspectorElement(cachedEditor); // WE NOW USE CACHED EDITOR INSTEAD OF OBJECT REFERENCE VALUE
+                    var inspectorElement = new InspectorElement(cachedEditor);
                     if (inspectorElement == null)
                         return inspectorElement;
                     inspectorElement.style.marginRight = -1;
@@ -232,7 +232,7 @@ namespace AstrotypeInspector.Editor
                 
                 // Reduce label width by inspector element x position
                 float labelWidth = EditorGUIUtility.labelWidth;
-                float positionX = inspectorElement.worldBound.x - 1f;
+                float positionX = inspectorElement.worldBound.x - 1.5f;
                 EditorGUIUtility.labelWidth = labelWidth - positionX;
                 
                 // Draw inspector with default margins
