@@ -92,10 +92,23 @@ namespace AstrotypeInspector.Editor
         private float separatorHeight = 1.5f;
         private float separatorMarginBottom = 3.5f;
         
+        private static float lastViewWidth;
+        private float cachedPositionWidth;
+        
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var attribute = this.attribute as TitleAttribute;
+            
+            // Create title content, style, and calculate height
+            GUIContent titleContent = new(attribute.Title);
+            GUIStyle titleStyle = CreateTitleStyle(attribute);
+            float titleHeight = CalculateTitleHeight(titleContent, titleStyle, PredictPositionWidth());
+            
+            // Create subtitle content, style, and calculate height
+            GUIContent subtitleContent = new(attribute.Subtitle);
+            GUIStyle subtitleStyle = CreateSubtitleStyle(attribute);
+            float subtitleHeight = CalculateSubtitleHeight(subtitleContent, subtitleStyle, PredictPositionWidth());
             
             float height = EditorGUI.GetPropertyHeight(property, label, true);
             height += titleMarginTop + titleHeight;
@@ -116,14 +129,17 @@ namespace AstrotypeInspector.Editor
                 ? EditorGUI.GetPropertyHeight(property) + EditorGUIUtility.standardVerticalSpacing
                 : 0;
             
-            // Create title style
-            GUIStyle titleStyle = new(EditorStyles.boldLabel);
-            titleStyle.fontStyle = GetFontStyleByTitleStyle(attribute.Style, titleStyle.fontStyle);
-            titleStyle.alignment = GetMiddleAnchorByAlign(attribute.Align); // EditorStyles.boldLabel style uses Middle for text anchor
+            // Cache position.width in Repaint event, used in GetPropertyHeight() to calculate paragraph height
+            if (Event.current.type == EventType.Repaint)
+                cachedPositionWidth = position.width;
+            
+            // Create title content, style, and calculate height
+            GUIContent titleContent = new(attribute.Title);
+            GUIStyle titleStyle = CreateTitleStyle(attribute);
+            float titleHeight = CalculateTitleHeight(titleContent, titleStyle, position.width);
             
             // Draw title label
             Rect titleRect = EditorGUI.IndentedRect(position);
-            
             titleRect.y += titleMarginTop + offsetIfBottom;
             titleRect.height = titleHeight;
             if (iconTexture != null) // Leave space for icon
@@ -131,7 +147,7 @@ namespace AstrotypeInspector.Editor
                 titleRect.x += iconSize + iconMarginRight;
                 titleRect.width += -iconSize + iconMarginRight;
             }
-            GUI.Label(titleRect, new GUIContent(attribute.Title), titleStyle);
+            GUI.Label(titleRect, titleContent, titleStyle);
             
             // Draw icon image
             if (iconTexture != null)
@@ -149,27 +165,19 @@ namespace AstrotypeInspector.Editor
                 GUI.Label(iconRect, new GUIContent(iconTexture), iconStyle);
             }
             
+            // Create subtitle content, style, and calculate height
+            GUIContent subtitleContent = new(attribute.Subtitle);
+            GUIStyle subtitleStyle = CreateSubtitleStyle(attribute);
+            float subtitleHeight = CalculateSubtitleHeight(subtitleContent, subtitleStyle, position.width);
+            
             // Draw subtitle label
             bool hasSubtitle = !string.IsNullOrWhiteSpace(attribute.Subtitle);
             if (hasSubtitle)
             {
-                // Create subtitle style
-                GUIStyle subtitleStyle = new(EditorStyles.miniLabel);
-                subtitleStyle.fontStyle = GetFontStyleByTitleStyle(attribute.Style, EditorStyles.miniLabel.fontStyle);
-                subtitleStyle.alignment = GetMiddleAnchorByAlign(attribute.Align);  // EditorStyles.boldLabel style uses Middle for text anchor
-                subtitleStyle.normal.textColor = SetAlpha(subtitleStyle.normal.textColor, 0.6f);
-                subtitleStyle.hover.textColor = SetAlpha(subtitleStyle.hover.textColor, 0.6f);
-                
-                // Calculate side offset, used to reduce remaining margin based on alignment
-                float sideOffset = attribute.Align == Align.Left ? -0.5f :
-                    attribute.Align == Align.Right ? 0.5f : 0f;
-                subtitleStyle.contentOffset = new(sideOffset, subtitleStyle.contentOffset.y);
-                
-                // Draw subtitle label
                 Rect subtitleRect = EditorGUI.IndentedRect(position);
                 subtitleRect.y += titleMarginTop + titleHeight + offsetIfBottom;
                 subtitleRect.height = subtitleHeight;
-                GUI.Label(subtitleRect, new GUIContent(attribute.Subtitle), subtitleStyle);
+                GUI.Label(subtitleRect, subtitleContent, subtitleStyle);
             }
             
             // Draw separator line
@@ -297,6 +305,69 @@ namespace AstrotypeInspector.Editor
             return propertyField;
         }
         
+        
+        private float PredictPositionWidth()
+        {
+            // Detect change in view width
+            float currentViewWidth = EditorGUIUtility.currentViewWidth;
+            bool hasCurrentViewWidthChanged = lastViewWidth != currentViewWidth;
+            lastViewWidth = EditorGUIUtility.currentViewWidth;
+            
+            // Use cached position.width from OnGUI() if view width doesn't update
+            if (!hasCurrentViewWidthChanged)
+                return cachedPositionWidth;
+            
+            // If current view width has changed, predict position.width
+            const float IndentWidth = 15f;
+            RectOffset inspectorPadding = EditorStyles.inspectorDefaultMargins.padding;
+            
+            // NOTE: Can't detect if scroll bar is present in the inspector
+            float currentIndentWidth = EditorGUI.indentLevel * IndentWidth; // * InspectorState.IndentDecimalOffset
+            return currentViewWidth - currentIndentWidth - inspectorPadding.left - inspectorPadding.right;
+        }
+        
+        private float CalculateTitleHeight(GUIContent content, GUIStyle style, float width)
+        {
+            float singleHeight = style.CalcHeight(new("."), 10f);
+            float fullHeight = style.CalcHeight(content, width);
+            float baseHeight = titleHeight;
+            
+            return baseHeight + fullHeight - singleHeight;
+        }
+        
+        private float CalculateSubtitleHeight(GUIContent content, GUIStyle style, float width)
+        {
+            float singleHeight = style.CalcHeight(new("."), 10f);
+            float fullHeight = style.CalcHeight(content, width);
+            float baseHeight = subtitleHeight;
+            
+            return baseHeight + fullHeight - singleHeight;
+        }
+        
+        
+        private static GUIStyle CreateTitleStyle(TitleAttribute attribute)
+        {
+            GUIStyle titleStyle = new(EditorStyles.boldLabel);
+            titleStyle.fontStyle = GetFontStyleByTitleStyle(attribute.Style, titleStyle.fontStyle);
+            titleStyle.alignment = GetMiddleAnchorByAlign(attribute.Align); // EditorStyles.boldLabel style uses Middle for text anchor
+            return titleStyle;
+        }
+        
+        private static GUIStyle CreateSubtitleStyle(TitleAttribute attribute)
+        {
+            GUIStyle subtitleStyle = new(EditorStyles.miniLabel);
+            subtitleStyle.fontStyle = GetFontStyleByTitleStyle(attribute.Style, EditorStyles.miniLabel.fontStyle);
+            subtitleStyle.alignment = GetMiddleAnchorByAlign(attribute.Align);  // EditorStyles.boldLabel style uses Middle for text anchor
+            subtitleStyle.normal.textColor = SetAlpha(subtitleStyle.normal.textColor, 0.6f);
+            subtitleStyle.hover.textColor = SetAlpha(subtitleStyle.hover.textColor, 0.6f);
+            
+            // Calculate side offset, used to reduce remaining margin based on alignment
+            float sideOffset = attribute.Align == Align.Left ? -0.5f :
+                attribute.Align == Align.Right ? 0.5f : 0f;
+            subtitleStyle.contentOffset = new(sideOffset, subtitleStyle.contentOffset.y);
+            
+            return subtitleStyle;
+        }
         
         private static FontStyle GetFontStyleByTitleStyle(TitleStyle titleStyle, FontStyle defaultFontStyle)
         {

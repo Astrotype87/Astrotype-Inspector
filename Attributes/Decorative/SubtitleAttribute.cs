@@ -58,9 +58,19 @@ namespace AstrotypeInspector.Editor
         private float iconSize = EditorGUIUtility.singleLineHeight - 3f - 2f;
         private float iconMarginRight = 1f;
         
+        private static float lastViewWidth;
+        private float cachedPositionWidth;
+        
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            var attribute = this.attribute as SubtitleAttribute;
+            
+            // Create subtitle content, style, and calculate height
+            GUIContent subtitleContent = new(attribute.Subtitle);
+            GUIStyle subtitleStyle = CreateSubtitleStyle(attribute);
+            float subtitleHeight = CalculateSubtitleHeight(subtitleContent, subtitleStyle, PredictPositionWidth());
+            
             return subtitleHeight + subtitleMarginBottom
                 + EditorGUI.GetPropertyHeight(property, label, true);
         }
@@ -73,17 +83,14 @@ namespace AstrotypeInspector.Editor
                 ? EditorGUI.GetPropertyHeight(property) + EditorGUIUtility.standardVerticalSpacing
                 : 0;
             
-            // Create subtitle style
-            GUIStyle subtitleStyle = new(EditorStyles.miniLabel);
-            subtitleStyle.fontStyle = attribute.Style;
-            subtitleStyle.alignment = GetMiddleAnchorByAlign(attribute.Align);  // EditorStyles.boldLabel style uses Middle for text anchor
-            subtitleStyle.normal.textColor = SetAlpha(subtitleStyle.normal.textColor, 0.6f);
-            subtitleStyle.hover.textColor = SetAlpha(subtitleStyle.hover.textColor, 0.6f);
+            // Cache position.width in Repaint event, used in GetPropertyHeight() to calculate paragraph height
+            if (Event.current.type == EventType.Repaint)
+                cachedPositionWidth = position.width;
             
-            // Calculate side offset, used to reduce remaining margin based on alignment
-            float sideOffset = attribute.Align == Align.Left ? -0.5f :
-                attribute.Align == Align.Right ? 0.5f : 0f;
-            subtitleStyle.contentOffset = new(sideOffset, subtitleStyle.contentOffset.y);
+            // Create subtitle content, style, and calculate height
+            GUIContent subtitleContent = new(attribute.Subtitle);
+            GUIStyle subtitleStyle = CreateSubtitleStyle(attribute);
+            float subtitleHeight = CalculateSubtitleHeight(subtitleContent, subtitleStyle, position.width);
             
             // Draw subtitle label
             Rect subtitleRect = EditorGUI.IndentedRect(position);
@@ -103,8 +110,8 @@ namespace AstrotypeInspector.Editor
                 GUIStyle iconStyle = new(EditorStyles.miniLabel);
                 iconStyle.alignment = GetMiddleAnchorByAlign(attribute.Align); // EditorStyles.miniLabel style uses Middle for text anchor
                 iconStyle.fixedHeight = iconSize; // reduce height to make icon smaller
-                iconStyle.contentOffset = new(sideOffset, iconMarginTop); // recenter after reducing height
-            
+                iconStyle.contentOffset = new(subtitleStyle.contentOffset.x, iconMarginTop); // recenter after reducing height
+                
                 // Draw icon image
                 Rect iconRect = EditorGUI.IndentedRect(position);
                 iconRect.y += offsetIfBottom;
@@ -188,6 +195,52 @@ namespace AstrotypeInspector.Editor
             return propertyField;
         }
         
+        
+        private float PredictPositionWidth()
+        {
+            // Detect change in view width
+            float currentViewWidth = EditorGUIUtility.currentViewWidth;
+            bool hasCurrentViewWidthChanged = lastViewWidth != currentViewWidth;
+            lastViewWidth = EditorGUIUtility.currentViewWidth;
+            
+            // Use cached position.width from OnGUI() if view width doesn't update
+            if (!hasCurrentViewWidthChanged)
+                return cachedPositionWidth;
+            
+            // If current view width has changed, predict position.width
+            const float IndentWidth = 15f;
+            RectOffset inspectorPadding = EditorStyles.inspectorDefaultMargins.padding;
+            
+            // NOTE: Can't detect if scroll bar is present in the inspector
+            float currentIndentWidth = EditorGUI.indentLevel * IndentWidth; // * InspectorState.IndentDecimalOffset
+            return currentViewWidth - currentIndentWidth - inspectorPadding.left - inspectorPadding.right;
+        }
+        
+        private float CalculateSubtitleHeight(GUIContent content, GUIStyle style, float width)
+        {
+            float singleHeight = style.CalcHeight(new("."), 10f);
+            float fullHeight = style.CalcHeight(content, width);
+            float baseHeight = subtitleHeight;
+            
+            return baseHeight + fullHeight - singleHeight;
+        }
+        
+        
+        private static GUIStyle CreateSubtitleStyle(SubtitleAttribute attribute)
+        {
+            GUIStyle subtitleStyle = new(EditorStyles.miniLabel);
+            subtitleStyle.fontStyle = attribute.Style;
+            subtitleStyle.alignment = GetMiddleAnchorByAlign(attribute.Align);  // EditorStyles.boldLabel style uses Middle for text anchor
+            subtitleStyle.normal.textColor = SetAlpha(subtitleStyle.normal.textColor, 0.6f);
+            subtitleStyle.hover.textColor = SetAlpha(subtitleStyle.hover.textColor, 0.6f);
+            
+            // Calculate side offset, used to reduce remaining margin based on alignment
+            float sideOffset = attribute.Align == Align.Left ? -0.5f :
+                attribute.Align == Align.Right ? 0.5f : 0f;
+            subtitleStyle.contentOffset = new(sideOffset, subtitleStyle.contentOffset.y);
+            
+            return subtitleStyle;
+        }
         
         private static TextAnchor GetMiddleAnchorByAlign(Align align)
         {
