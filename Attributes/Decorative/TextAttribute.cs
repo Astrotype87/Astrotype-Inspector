@@ -171,8 +171,11 @@ namespace AstrotypeInspector.Editor
         
         private static float CalculateTextHeight(GUIContent content, GUIStyle style, float width)
         {
-            const float ExtraLineHeight = 3f; // EditorGUIUtility.singleLineHeight - EditorStyles.label.lineHeight (18f - 15f)
-            return Mathf.Round(style.CalcHeight(content, width)) + ExtraLineHeight;
+            float singleHeight = style.CalcHeight(new("."), 10f);
+            float fullHeight = style.CalcHeight(content, width);
+            float baseHeight = singleHeight + 3f;
+            
+            return baseHeight + fullHeight - singleHeight;
         }
         
         private static TextAnchor GetMiddleAnchorByAlign(Align align)

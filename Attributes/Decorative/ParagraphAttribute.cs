@@ -161,6 +161,15 @@ namespace AstrotypeInspector.Editor
             return currentViewWidth - currentIndentWidth - LeftPadding - RightPadding;
         }
         
+        private float CalculateParagraphHeight(GUIContent content, GUIStyle style, float width)
+        {
+            float singleHeight = style.CalcHeight(new("."), 10f);
+            float fullHeight = style.CalcHeight(content, width);
+            float baseHeight = singleHeight + 3f;
+            
+            return baseHeight + fullHeight - singleHeight;
+        }
+        
         
         private static GUIStyle CreateParagraphStyle(ParagraphAttribute attribute)
         {
@@ -171,12 +180,6 @@ namespace AstrotypeInspector.Editor
                 alignment = GetMiddleAnchorByAlign(attribute.Align),
                 wordWrap = true,
             };
-        }
-        
-        private static float CalculateParagraphHeight(GUIContent content, GUIStyle style, float width)
-        {
-            const float ExtraLineHeight = 3f; // EditorGUIUtility.singleLineHeight - EditorStyles.label.lineHeight (18f - 15f)
-            return Mathf.Round(style.CalcHeight(content, width)) + ExtraLineHeight;
         }
         
         private static TextAnchor GetMiddleAnchorByAlign(Align align)
