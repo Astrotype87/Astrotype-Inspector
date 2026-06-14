@@ -59,7 +59,7 @@ namespace AstrotypeInspector
             {
                 for (int i = index + 1; i < attributes.Length; i++)
                 {
-                    if (attributes[i] is IGroupAttribute)
+                    if (attributes[i] is GroupAttribute)
                     {
                         return _isAppliedToMemberCache[key] = true;
                     }
