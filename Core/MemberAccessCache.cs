@@ -16,13 +16,14 @@ namespace AstrotypeInspector
         private static readonly Dictionary<(Type, string), MemberInfo[]> memberInfoPathCache = new();
         
         /// <summary> Get value of a member by its target object and nested member path. </summary>
-        public static object GetMemberValue(object targetObject, string memberPath)
+        public static Result<object> GetMemberValue(object targetObject, string memberPath)
         {
-            MemberInfo[] memberInfoPath = GetMemberInfoPath(targetObject.GetType(), memberPath);
-            if (memberInfoPath == null)
-                return null;
+            var result = GetMemberInfoPath(targetObject.GetType(), memberPath);
+            if (result.IsFailure)
+                return Error.Message(result.ErrorMessage);
             
             object currentObject = targetObject;
+            MemberInfo[] memberInfoPath = result.Value;
             foreach (var memberInfo in memberInfoPath)
             {
                 if (currentObject == null) return null;
@@ -43,11 +44,11 @@ namespace AstrotypeInspector
         
         
         /// <summary> Get list of member info to describe member path, staring from root type towards the target member. </summary>
-        private static MemberInfo[] GetMemberInfoPath(Type rootType, string memberPath)
+        private static Result<MemberInfo[]> GetMemberInfoPath(Type rootType, string memberPath)
         {
             // Check if type is null or path is null or whitespace
             if (rootType == null || string.IsNullOrWhiteSpace(memberPath))
-                return Array.Empty<MemberInfo>();
+                return Error.Message("The rootType is null or memberPath is null or whitespace.");
             
             // Create member key using member type and property path
             (Type, string) key = (rootType, memberPath);
@@ -73,13 +74,9 @@ namespace AstrotypeInspector
                     ?? currentType.GetProperty(memberNames[i], FLAGS) as MemberInfo
                     ?? currentType.GetMethod(memberNames[i], FLAGS);
                 
-                // Return null array if field/property/method does not exist, skipping entire member search
-                if (member  == null)
-                {
-                    // TODO: [WARNING CHECKPOINT] Put warning in WarningRegistry.AddWarning(object)
-                    Debug.LogWarning($"Member \"{memberNames[i]}\" not found from type {currentType.Name} ({currentType.FullName})");
-                    return null;
-                }
+                // Return error if field/property/method does not exist, skipping entire member search
+                if (member == null)
+                    return Error.Message($"Member \"{memberNames[i]}\" not found from type \"{currentType.Name}\".");
                 
                 // Add member info top list
                 membersArray[i] = member;
