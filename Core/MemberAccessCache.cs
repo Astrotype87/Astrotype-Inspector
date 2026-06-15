@@ -7,89 +7,112 @@ namespace AstrotypeInspector
 {
     public static class MemberAccessCache
     {
-        /// <summary>
-        /// (Type, string) represents a unique targetObject + memberPath key.<br/>
-        /// • Type is the target object like MonoBehaviour or ScriptableObject.<br/>
-        /// • string is the property path relative to the target object.<br/>
-        /// MemberInfo[] is the chain of member info to describe member path. 
-        /// </summary>
-        private static readonly Dictionary<(Type, string), MemberInfo[]> memberInfoPathCache = new();
+        private static readonly Dictionary<(Type, string), MemberInfo[]> memberPathCache = new();
+        private static readonly Dictionary<(Type, string), Error> errorCache = new();
         
-        /// <summary> Get value of a member by its target object and nested member path. </summary>
-        public static Result<object> GetMemberValue(object targetObject, string memberPath)
+        /// <summary>
+        /// Get the value of a field, property, or method inside the object.<br/>
+        /// NOTE: Method must be parameterless and non-void return type.
+        /// </summary>
+        /// <param name="targetObject">The instance to access.</param>
+        /// <param name="memberNameOrPath">The name or dotted path of field, property, or method (e.g. <c>health</c>, <c>stats.propulsion.topSpeed</c>).</param>
+        /// <returns>The value of field, property, or method.</returns>
+        public static Result<object> GetValue(object targetObject, string memberNameOrPath)
         {
-            var result = GetMemberInfoPath(targetObject.GetType(), memberPath);
+            if (targetObject == null)
+                return Errors.NullTargetObject;
+            
+            var result = ResolveMemberPath(targetObject.GetType(), memberNameOrPath);
             if (result.IsFailure)
-                return Error.Message(result.ErrorMessage);
+                return Result.Failure(result.Error);
             
             object currentObject = targetObject;
             MemberInfo[] memberInfoPath = result.Value;
-            foreach (var memberInfo in memberInfoPath)
+            foreach (var member in memberInfoPath)
             {
-                if (currentObject == null) return null;
-                
-                if (memberInfo is FieldInfo field) currentObject = field.GetValue(currentObject);
-                else if (memberInfo is PropertyInfo property) currentObject = property.GetValue(currentObject);
-                else if (memberInfo is MethodInfo method) currentObject = method.Invoke(currentObject, null);
+                if (member is FieldInfo f) currentObject = f.GetValue(currentObject);
+                else if (member is PropertyInfo p) currentObject = p.GetValue(currentObject);
+                else if (member is MethodInfo m) currentObject = m.Invoke(currentObject, null);
+                else return Errors.InvalidMemberType;
             }
             
             return currentObject;
         }
         
-        public static void SetMemberValue(object targetObject, string memberPath)
+        /// <summary>
+        /// Get list of member info to describe the path of a nested member.
+        /// </summary>
+        private static Result<MemberInfo[]> ResolveMemberPath(Type rootType, string memberNameOrPath)
         {
+            // Throw exceptions for invalid parameters
+            if (rootType == null)
+                throw new ArgumentNullException(nameof(rootType));
+            if (string.IsNullOrWhiteSpace(memberNameOrPath))
+                throw new ArgumentException("The memberNameOrPath is null or white space.", nameof(memberNameOrPath));
             
-        }
-        
-        
-        
-        /// <summary> Get list of member info to describe member path, staring from root type towards the target member. </summary>
-        private static Result<MemberInfo[]> GetMemberInfoPath(Type rootType, string memberPath)
-        {
-            // Check if type is null or path is null or whitespace
-            if (rootType == null || string.IsNullOrWhiteSpace(memberPath))
-                return Error.Message("The rootType is null or memberPath is null or whitespace.");
+            // Return cached member path or error
+            (Type, string) key = (rootType, memberNameOrPath);
+            if (memberPathCache.TryGetValue(key, out MemberInfo[] memberInfoArray))
+                return memberInfoArray;
+            if (errorCache.TryGetValue(key, out Error error))
+                return error;
             
-            // Create member key using member type and property path
-            (Type, string) key = (rootType, memberPath);
-            
-            // Retrieve cached member path by (type, path) pair, and return value
-            if (memberInfoPathCache.TryGetValue(key, out MemberInfo[] membersArray))
-                return membersArray;
-            
-            
-            // Initialize variables
-            string[] memberNames = memberPath.Split(".");
-            membersArray = new MemberInfo[memberNames.Length];
+            string[] memberNames = memberNameOrPath.Split(".");
+            memberInfoArray = new MemberInfo[memberNames.Length];
             Type currentType = rootType;
             
             // Look for each member name split by '.'
-            for (int i = 0; i < membersArray.Length; i++)
+            for (int i = 0; i < memberInfoArray.Length; i++)
             {
-                // The target member must be an instance type, and it can be public or nonpublic
+                string memberName = memberNames[i]; // TODO LATER: Trim out '()' parenthesis check for methods with no parameters
+                bool isLastMember = i == memberInfoArray.Length - 1;
                 const BindingFlags FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
                 
-                // Get reference to field/property/method
-                MemberInfo member = currentType.GetField(memberNames[i], FLAGS) as MemberInfo
-                    ?? currentType.GetProperty(memberNames[i], FLAGS) as MemberInfo
-                    ?? currentType.GetMethod(memberNames[i], FLAGS);
+                // Get reference to field, property, or method
+                MemberInfo member = currentType.GetField(memberNames[i], FLAGS);
+                member ??= currentType.GetProperty(memberNames[i], FLAGS);
+                member ??= currentType.GetMethod(memberNames[i], FLAGS);
                 
-                // Return error if field/property/method does not exist, skipping entire member search
+                // Check for errors: void method and member not found
+                if (member is MethodInfo methodInfo && methodInfo.ReturnType == typeof(void))
+                    return errorCache[key] = Errors.VoidMethod(memberName);
                 if (member == null)
-                    return Error.Message($"Member \"{memberNames[i]}\" not found from type \"{currentType.Name}\".");
+                    return errorCache[key] = Errors.MemberNotFound(memberName, currentType);
                 
-                // Add member info top list
-                membersArray[i] = member;
+                // Save new member info, end the loop if last member.
+                memberInfoArray[i] = member;
+                if (isLastMember) break;
                 
-                // Set this member as the next type to search from
-                currentType = null;
+                // Set next current type
                 if (member is FieldInfo field) currentType = field.FieldType;
                 else if (member is PropertyInfo property) currentType = property.PropertyType;
                 else if (member is MethodInfo method) currentType = method.ReturnType;
+                else return errorCache[key] = Errors.InvalidMemberType;
             }
             
             // Save member info array to cache and return
-            return memberInfoPathCache[key] = membersArray;
+            return memberPathCache[key] = memberInfoArray;
+        }
+        
+        private static class Errors
+        {
+            public static Error NullTargetObject
+                => new("NullTargetObject", $"The targetObject is null.");
+                
+            public static Error MemberNotFound(string memberName, Type type)
+                => new("MemberNotFound", $"Member '{memberName}' not found from type '{type.Name}'");
+            
+            public static Error VoidMethod(string methodName)
+                => new("VoidMethod", $"Method '{methodName}' has a void return type which cannot be traversed.");
+            
+            public static Error AmbiguousMethod(string methodName, Type type)
+                => new("AmbiguousMethod", $"Multiple overloads of '{methodName}' on '{type.Name}' match the supplied arguments.");
+            
+            public static Error NotMethod
+                => new("NotMethod", "The member path is not a method.");
+                
+            public static Error InvalidMemberType
+                => new("InvalidMemberType", $"The MemberInfo is not a field, property, or method.");
         }
         
     }
