@@ -174,7 +174,7 @@ namespace AstrotypeInspector.Editor
             // HACK: Temporary placeholder before ConditionalExpressionParser is implemented
             string memberPath = string.IsNullOrWhiteSpace(parentPath)
                 ? boolExpression : $"{parentPath}.{boolExpression}";
-            object memberValue = MemberAccessCache.GetMemberValue(targetObject, memberPath);
+            object memberValue = MemberAccessCache.GetValue(targetObject, memberPath).Value;
             
             // Return bool value or return false if unity object reference or serialized reference is null
             if (memberValue is bool boolValue)

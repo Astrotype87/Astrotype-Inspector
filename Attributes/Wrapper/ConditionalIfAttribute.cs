@@ -76,8 +76,6 @@ namespace AstrotypeInspector
 namespace AstrotypeInspector.Editor
 {
     using System;
-    using System.Reflection;
-    using System.Collections.Generic;
     using UnityEngine;
     using UnityEditor;
     using UnityEngine.UIElements;
@@ -90,7 +88,10 @@ namespace AstrotypeInspector.Editor
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return IsVisible(property, attribute as ConditionalIfAttribute)
+            var attribute = this.attribute as ConditionalIfAttribute;
+            bool condition = EvaluateCondition(property, attribute);
+            
+            return IsVisible(condition, attribute)
                 ? EditorGUI.GetPropertyHeight(property, label, true)
                 : -EditorGUIUtility.standardVerticalSpacing;
         }
@@ -98,8 +99,9 @@ namespace AstrotypeInspector.Editor
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var attribute = this.attribute as ConditionalIfAttribute;
-            bool isVisible = IsVisible(property, attribute);
-            bool isEnabled = IsEnabled(property, attribute);
+            bool condition = EvaluateCondition(property, attribute);
+            bool isVisible = IsVisible(condition, attribute);
+            bool isEnabled = IsEnabled(condition, attribute);
             
             if (isVisible)
             {
@@ -122,8 +124,9 @@ namespace AstrotypeInspector.Editor
                 if (property.serializedObject.targetObject == null) return;
                 
                 var attribute = this.attribute as ConditionalIfAttribute;
-                bool isVisible = IsVisible(property, attribute);
-                bool isEnabled = IsEnabled(property, attribute);
+                bool condition = EvaluateCondition(property, attribute);
+                bool isVisible = IsVisible(condition, attribute);
+                bool isEnabled = IsEnabled(condition, attribute);
                 
                 propertyField.style.display = isVisible ? DisplayStyle.Flex : DisplayStyle.None;
                 propertyField.SetEnabled(isEnabled);
@@ -138,27 +141,16 @@ namespace AstrotypeInspector.Editor
         
         
         // PRIVATE STATIC MEMBERS
-        private static bool IsVisible(SerializedProperty property, ConditionalIfAttribute attribute)
-        {
-            object targetObject = property.serializedObject.targetObject;
-            string relativePath = GetRelativePath(property);
-            
-            bool condition = EvaluateCondition(targetObject, relativePath, attribute);
-            return attribute is ShowIfAttribute ? condition
+        private static bool IsVisible(bool condition, ConditionalIfAttribute attribute)
+            => attribute is ShowIfAttribute ? condition
                 : attribute is HideIfAttribute ? !condition
                 : true;
-        }
         
-        private static bool IsEnabled(SerializedProperty property, ConditionalIfAttribute attribute)
-        {
-            object targetObject = property.serializedObject.targetObject;
-            string relativePath = GetRelativePath(property);
-            
-            bool condition = EvaluateCondition(targetObject, relativePath, attribute);
-            return attribute is EnableIfAttribute ? condition
+        private static bool IsEnabled(bool condition, ConditionalIfAttribute attribute)
+            => attribute is EnableIfAttribute ? condition
                 : attribute is DisableIfAttribute ? !condition
                 : true;
-        }
+        
         
         private static string GetRelativePath(SerializedProperty property)
         {
@@ -170,9 +162,11 @@ namespace AstrotypeInspector.Editor
                 : string.Empty;
         }
         
-        
-        private static bool EvaluateCondition(object targetObject, string relativePath, ConditionalIfAttribute attribute)
+        private static bool EvaluateCondition(SerializedProperty property, ConditionalIfAttribute attribute)
         {
+            object targetObject = property.serializedObject.targetObject;
+            string relativePath = GetRelativePath(property);
+            
             // Evaluate expression based on condition type
             if (attribute.Type == ConditionType.BoolExpression)
                 return EvaluateBoolExpression(targetObject, relativePath, attribute.BoolExpression);
@@ -189,7 +183,7 @@ namespace AstrotypeInspector.Editor
             // HACK: Temporary placeholder before ConditionalExpressionParser is implemented
             string memberPath = string.IsNullOrWhiteSpace(relativePath)
                 ? boolExpression : $"{relativePath}.{boolExpression}";
-            object memberValue = MemberAccessCache.GetMemberValue(targetObject, memberPath);
+            object memberValue = MemberAccessCache.GetValue(targetObject, memberPath).Value;
             
             // Return bool value or return false if unity object reference or serialized reference is null
             if (memberValue is bool boolValue)
@@ -211,7 +205,7 @@ namespace AstrotypeInspector.Editor
             // Get member path and value
             string memberPath = string.IsNullOrWhiteSpace(relativePath)
                 ? enumMemberName : $"{relativePath}.{enumMemberName}";
-            object memberValue = MemberAccessCache.GetMemberValue(targetObject, memberPath);
+            object memberValue = MemberAccessCache.GetValue(targetObject, memberPath).Value;
             
             // Return true if one enum value matches
             foreach (object enumValue in enumMatchValues)
