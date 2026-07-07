@@ -34,11 +34,18 @@ namespace AstrotypeInspector
         
         public static Texture GetIconTexture(Icon icon)
         {
-            if (icon == Icon._NONE || icon == Icon._AUTO) return null;
-            
-            #if UNITY_EDITOR
-            else return UnityEditor.EditorGUIUtility.IconContent(GetIconPath(icon)).image;
-            #endif
+            if (icon == Icon._NONE || icon == Icon._AUTO)
+            {
+                return null;
+            }
+            else
+            {
+#if UNITY_EDITOR
+                return UnityEditor.EditorGUIUtility.IconContent(GetIconPath(icon)).image;
+#else
+                return null;
+#endif
+            }
         }
         
     }
