@@ -202,10 +202,12 @@ namespace AstrotypeInspector.Editor
     
     #if !DISABLE_ASTROTYPE_INSPECTOR
     /// <summary> Overrides the default MonoBehaviour fallback editor to use AstrotypeInspector. </summary>
+    [CanEditMultipleObjects]
     [CustomEditor(typeof(MonoBehaviour), editorForChildClasses: true, isFallback = true)]
     public class MonoBehaviourEditor : AstrotypeEditor { }
     
     /// <summary> Overrides the default ScriptableObject fallback editor to use AstrotypeInspector. </summary>
+    [CanEditMultipleObjects]
     [CustomEditor(typeof(ScriptableObject), editorForChildClasses: true, isFallback = true)]
     public class ScriptableObjectEditor : AstrotypeEditor { }
     
